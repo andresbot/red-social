@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil de Usuario - Quetzal</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1 class="logo">Quetzal</h1>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/vistas/index.html" class="nav-item">
+          <i class="nav-icon fas fa-home"></i>
+          <span>Inicio</span>
+        </a>
+        <a href="/vistas/mis-servicios.html" class="nav-item">
+          <i class="nav-icon fas fa-briefcase"></i>
+          <span>Mis Servicios</span>
+        </a>
+        <a href="/publicar-servicio" class="nav-item">
+          <i class="nav-icon fas fa-plus-circle"></i>
+          <span>Publicar Servicio</span>
+        </a>
+        <a href="/vistas/buscar-servicios.html" class="nav-item">
+          <i class="nav-icon fas fa-search"></i>
+          <span>Buscar Servicios</span>
+        </a>
+        <a href="/vistas/contratos.html" class="nav-item">
+          <i class="nav-icon fas fa-file-contract"></i>
+          <span>Contratos</span>
+        </a>
+        <a href="#" class="nav-item" data-page="messages">
+          <i class="nav-icon fas fa-comments"></i>
+          <span>Mensajes</span>
+        </a>
+        <a href="/perfil" class="nav-item">
+          <i class="nav-icon fas fa-user-circle"></i>
+          <span>Mi Perfil</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-secondary" id="logoutBtn" style="width:100%;">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="content-header">
+        <button class="btn-secondary" onclick="history.back()" style="margin-right: 16px;">
+          <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <h1><i class="fas fa-user"></i> Perfil de Usuario</h1>
+      </header>
+
+      <div style="max-width: 980px; margin: 0 auto; padding: 0 32px 32px;">
+        
+        <!-- Loading -->
+        <div id="loadingState" class="card">
+          <div class="card-body" style="text-align: center; padding: 48px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: var(--primary);"></i>
+            <p style="margin-top: 16px; color: var(--text-secondary);">Cargando perfil...</p>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div id="errorState" class="card" style="display: none;">
+          <div class="card-body" style="text-align: center; padding: 48px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--danger);"></i>
+            <h2 style="margin-top: 16px;">Perfil no disponible</h2>
+            <p id="errorMessage" style="margin-top: 8px; color: var(--text-secondary);"></p>
+          </div>
+        </div>
+
+        <!-- Profile Content -->
+        <div id="profileContent" style="display: none;">
+          <div class="card">
+            <div class="card-body">
+              <div style="display: flex; gap: 24px; align-items: start; margin-bottom: 24px; flex-wrap: wrap;">
+                <!-- Avatar -->
+                <div style="flex-shrink: 0;">
+                  <div style="position: relative;">
+                    <div id="userAvatar" style="width: 120px; height: 120px; border-radius: 50%; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center; font-size: 48px; color: var(--primary); border: 4px solid var(--border);">
+                      <i class="fas fa-user"></i>
+                    </div>
+                    <span id="verifiedBadge" style="position: absolute; bottom: 5px; right: 5px; background: var(--success); color: white; width: 32px; height: 32px; border-radius: 50%; display: none; align-items: center; justify-content: center; border: 3px solid var(--bg-primary);">
+                      <i class="fas fa-check" style="font-size: 14px;"></i>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Info -->
+                <div style="flex: 1; min-width: 300px;">
+                  <h2 id="userName" style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">Usuario</h2>
+                  <p id="userEmail" class="helper" style="font-size: 16px; margin-bottom: 16px; display: none;">
+                    <i class="fas fa-envelope"></i> <span>-</span>
+                  </p>
+                  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+                    <span class="badge" id="userRole">-</span>
+                    <span class="helper" id="userPhone" style="display: none;">
+                      <i class="fas fa-phone"></i> <span>-</span>
+                    </span>
+                    <span class="helper" id="userCity" style="display: none;">
+                      <i class="fas fa-map-marker-alt"></i> <span>-</span>
+                    </span>
+                  </div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn-primary" id="contactBtn">
+                      <i class="fas fa-envelope"></i> Contactar
+                    </button>
+                    <button class="btn-secondary" id="viewServicesBtn" style="display: none;">
+                      <i class="fas fa-briefcase"></i> Ver Servicios
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bio -->
+              <div id="userBioContainer" style="display: none; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">
+                  <i class="fas fa-quote-left"></i> Sobre mí
+                </h3>
+                <p id="userBio" style="color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap;">-</p>
+              </div>
+
+              <!-- Website -->
+              <div id="userWebsiteContainer" style="display: none; margin-top: 16px;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">
+                  <i class="fas fa-globe"></i> Sitio Web
+                </h3>
+                <a id="userWebsite" href="#" target="_blank" style="color: var(--primary); text-decoration: none;">-</a>
+              </div>
+
+              <!-- Social Links -->
+              <div id="userSocialLinks" style="margin-top: 16px; display: none;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">
+                  <i class="fas fa-share-alt"></i> Redes Sociales
+                </h3>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                  <a href="#" id="linkedinLink" target="_blank" class="icon-btn" style="display: none;" title="LinkedIn">
+                    <i class="fab fa-linkedin" style="color: #0077b5; font-size: 20px;"></i>
+                  </a>
+                  <a href="#" id="githubLink" target="_blank" class="icon-btn" style="display: none;" title="GitHub">
+                    <i class="fab fa-github" style="color: #333; font-size: 20px;"></i>
+                  </a>
+                  <a href="#" id="twitterLink" target="_blank" class="icon-btn" style="display: none;" title="Twitter">
+                    <i class="fab fa-twitter" style="color: #1da1f2; font-size: 20px;"></i>
+                  </a>
+                  <a href="#" id="portfolioLink" target="_blank" class="icon-btn" style="display: none;" title="Portfolio">
+                    <i class="fas fa-briefcase" style="color: var(--primary); font-size: 20px;"></i>
+                  </a>
+                </div>
+              </div>
+
+              <!-- Skills -->
+              <div id="skillsSection" style="margin-top: 24px; display: none;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">
+                  <i class="fas fa-tools"></i> Habilidades
+                </h3>
+                <div id="skillsList" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <!-- Skills badges -->
+                </div>
+              </div>
+
+              <!-- Stats -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                <div style="text-align: center; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                  <div style="font-size: 28px; font-weight: 700; color: var(--primary);" id="statsServices">0</div>
+                  <div class="helper">Servicios Publicados</div>
+                </div>
+                <div style="text-align: center; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                  <div style="font-size: 28px; font-weight: 700; color: var(--success);" id="statsContracts">0</div>
+                  <div class="helper">Contratos Completados</div>
+                </div>
+                <div style="text-align: center; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                  <div style="font-size: 28px; font-weight: 700; color: var(--warning);">
+                    <span id="statsRating">-</span>
+                    <span id="statsRatingCount" style="font-size: 14px; color: var(--text-tertiary); margin-left: 4px;"></span>
+                  </div>
+                  <div class="helper">Calificación</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Services Section -->
+          <div id="servicesSection" style="margin-top: 24px; display: none;">
+            <div class="card">
+              <div class="card-header">
+                <h2><i class="fas fa-briefcase"></i> Servicios Activos</h2>
+              </div>
+              <div class="card-body">
+                <div id="servicesList" class="services-grid">
+                  <!-- Services cards -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/js/ver-perfil.js"></script>
+</body>
+</html>

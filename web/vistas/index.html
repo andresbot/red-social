@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quetzal - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="logo">Quetzal</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="dashboard">
+                <i class="nav-icon fas fa-home"></i>
+                <span>Inicio</span>
+            </a>
+            <a href="/vistas/mis-servicios.html" class="nav-item">
+                <i class="nav-icon fas fa-briefcase"></i>
+                <span>Mis Servicios</span>
+            </a>
+            <a href="/publicar-servicio" class="nav-item">
+                <i class="nav-icon fas fa-plus-circle"></i>
+                <span>Publicar Servicio</span>
+            </a>
+            <a href="/vistas/buscar-servicios.html" class="nav-item">
+                <i class="nav-icon fas fa-search"></i>
+                <span>Buscar Servicios</span>
+            </a>
+            <a href="/vistas/contratos.html" class="nav-item">
+                <i class="nav-icon fas fa-file-contract"></i>
+                <span>Contratos</span>
+            </a>
+            <a href="#" class="nav-item" data-page="messages">
+                <i class="nav-icon fas fa-comments"></i>
+                <span>Mensajes</span>
+            </a>
+            <a href="#" class="nav-item" data-page="wallet">
+                <i class="nav-icon fas fa-wallet"></i>
+                <span>Cartera</span>
+            </a>
+            <a href="/perfil" class="nav-item">
+                <i class="nav-icon fas fa-user"></i>
+                <span>Perfil</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item" id="logout-btn">
+                <i class="nav-icon fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h2 class="page-title">Dashboard</h2>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" id="notifications-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notifications-count">0</span>
+                </button>
+                <div class="user-menu">
+                    <img src="https://ui-avatars.com/api/?name=Usuario+Demo&background=6366f1&color=fff" alt="Usuario" class="avatar" id="user-avatar">
+                    <span class="user-role" id="user-role-badge"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-title">Balance</h3>
+                    <p class="stat-value" id="balance">0.0 Q</p>
+                    <p class="stat-change positive">+0.0%</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-title">Servicios Activos</h3>
+                    <p class="stat-value" id="active-services">0</p>
+                    <p class="stat-change positive">+0 este mes</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-title">Mensajes</h3>
+                    <p class="stat-value" id="messages">0</p>
+                    <p class="stat-change">Sin leer</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon orange">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-title">Calificación</h3>
+                    <p class="stat-value" id="rating">5.0</p>
+                    <p class="stat-change">0 reseñas</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="content-grid">
+            <!-- Recent Services -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Servicios Recientes</h3>
+                    <a href="#" class="btn-link">Ver todos</a>
+                </div>
+                <div class="card-body">
+                    <div class="service-list" id="recent-services">
+                        <div class="empty-state">
+                            <i class="fas fa-briefcase fa-3x"></i>
+                            <p>No hay servicios publicados</p>
+                            <button class="btn-primary">Publicar servicio</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Actividad Reciente</h3>
+                </div>
+                <div class="card-body">
+                    <div class="activity-list" id="recent-activity">
+                        <div class="empty-state">
+                            <i class="fas fa-chart-line fa-3x"></i>
+                            <p>No hay actividad reciente</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="/js/app.js"></script>
+</body>
+</html>

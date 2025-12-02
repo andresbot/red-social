@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quetzal — Mis Servicios</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1 class="logo">Quetzal</h1>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/vistas/index.html" class="nav-item">
+          <i class="nav-icon fas fa-home"></i>
+          <span>Inicio</span>
+        </a>
+        <a href="/publicar-servicio" class="nav-item">
+          <i class="nav-icon fas fa-plus-circle"></i>
+          <span>Publicar Servicio</span>
+        </a>
+        <a href="/vistas/mis-servicios.html" class="nav-item active">
+          <i class="nav-icon fas fa-briefcase"></i>
+          <span>Mis Servicios</span>
+        </a>
+        <a href="/vistas/buscar-servicios.html" class="nav-item">
+          <i class="nav-icon fas fa-search"></i>
+          <span>Buscar Servicios</span>
+        </a>
+        <a href="/vistas/contratos.html" class="nav-item">
+          <i class="fas fa-file-contract"></i>
+          <span>Contratos</span>
+        </a>
+        <a href="#" class="nav-item" data-page="messages">
+          <i class="nav-icon fas fa-comments"></i>
+          <span>Mensajes</span>
+        </a>
+        <a href="#" class="nav-item" data-page="wallet">
+          <i class="nav-icon fas fa-wallet"></i>
+          <span>Cartera</span>
+        </a>
+        <a href="/perfil" class="nav-item">
+          <i class="nav-icon fas fa-user"></i>
+          <span>Perfil</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="#" class="nav-item" id="logout-btn">
+          <i class="nav-icon fas fa-sign-out-alt"></i>
+          <span>Cerrar Sesión</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h2 class="page-title">Mis Servicios</h2>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn" id="notifications-btn">
+            <i class="fas fa-bell"></i>
+            <span class="badge" id="notifications-count">0</span>
+          </button>
+          <div class="user-menu">
+            <img src="https://ui-avatars.com/api/?name=Usuario+Demo&background=6366f1&color=fff" alt="Usuario" class="avatar" id="user-avatar">
+            <span class="user-role" id="user-role-badge"></span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Grid -->
+      <div class="content-grid">
+        <div class="card" style="width:100%; max-width: 1100px; margin: 0 auto;">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-briefcase" style="color: var(--primary);"></i>
+              Tus servicios publicados
+            </h3>
+            <span class="helper">Administra tus servicios: edita detalles o desactívalos cuando sea necesario.</span>
+          </div>
+          <div class="card-body">
+            <div class="form-actions" style="justify-content: flex-start;">
+              <a href="/publicar-servicio" class="btn-primary">
+                <i class="fas fa-plus-circle"></i>
+                Nuevo Servicio
+              </a>
+            </div>
+            <div id="servicesList" class="services-list" style="margin-top: 16px;"></div>
+            <div id="servicesMessage" class="helper" style="display:none; margin-top: 12px;"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal Edición -->
+    <div id="editModal" class="modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); align-items: center; justify-content: center;">
+      <div class="card" style="width:100%; max-width: 720px;">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-pen" style="color: var(--primary);"></i>
+            Editar Servicio
+          </h3>
+          <span class="helper">Actualiza los datos de tu servicio.</span>
+        </div>
+        <div class="card-body">
+          <form id="editForm" class="form-grid">
+            <input type="hidden" id="edit_id" />
+
+            <div class="form-group" style="max-width: 680px;">
+              <label class="form-label" for="edit_title"><i class="fas fa-heading"></i> Título *</label>
+              <input id="edit_title" type="text" class="input" required minlength="10" maxlength="100" />
+            </div>
+
+            <div class="input-row" style="max-width: 680px;">
+              <div class="form-group">
+                <label class="form-label" for="edit_category"><i class="fas fa-tag"></i> Categoría *</label>
+                <select id="edit_category" class="select" required>
+                  <option value="desarrollo">Desarrollo y Programación</option>
+                  <option value="diseno">Diseño Gráfico</option>
+                  <option value="marketing">Marketing Digital</option>
+                  <option value="redaccion">Redacción y Traducción</option>
+                  <option value="video">Video y Animación</option>
+                  <option value="musica">Música y Audio</option>
+                  <option value="consultoria">Consultoría</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="edit_price"><i class="fas fa-coins"></i> Precio (QZ) *</label>
+                <input id="edit_price" type="number" class="input" required min="0.5" step="0.5" />
+              </div>
+            </div>
+
+            <div class="form-group" style="max-width: 680px;">
+              <label class="form-label" for="edit_delivery"><i class="fas fa-clock"></i> Tiempo de entrega *</label>
+              <select id="edit_delivery" class="select" required>
+                <option value="1 día">1 día</option>
+                <option value="2 días">2 días</option>
+                <option value="3 días">3 días</option>
+                <option value="5 días">5 días</option>
+                <option value="7 días">7 días</option>
+                <option value="14 días">14 días</option>
+                <option value="30 días">30 días</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="max-width: 680px;">
+              <label class="form-label" for="edit_description"><i class="fas fa-align-left"></i> Descripción *</label>
+              <textarea id="edit_description" class="input" rows="5" required minlength="50" maxlength="2000"></textarea>
+            </div>
+
+            <div class="form-group" style="max-width: 680px;">
+              <label class="form-label" for="edit_requirements"><i class="fas fa-list-check"></i> Requisitos</label>
+              <textarea id="edit_requirements" class="input" rows="4" maxlength="1000"></textarea>
+            </div>
+
+            <div class="form-group" style="max-width: 680px;">
+              <label class="form-label" for="edit_image"><i class="fas fa-image"></i> Cambiar imagen (opcional)</label>
+              <input id="edit_image" name="edit_image" type="file" accept="image/*" class="input" />
+              <div class="helper">Deja vacío para mantener la imagen actual. Máx. 2MB.</div>
+            </div>
+
+            <div class="form-actions" style="max-width: 680px;">
+              <button type="submit" class="btn-primary"><i class="fas fa-check"></i> Guardar</button>
+              <button type="button" id="editCancel" class="btn-secondary"><i class="fas fa-times"></i> Cancelar</button>
+            </div>
+            <div id="editMessage" class="helper" style="display:none; max-width: 680px;"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/js/mis-servicios.js"></script>
+  </body>
+</html>

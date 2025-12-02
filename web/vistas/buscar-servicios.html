@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quetzal — Buscar Servicios</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1 class="logo">Quetzal</h1>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/vistas/index.html" class="nav-item">
+          <i class="nav-icon fas fa-home"></i>
+          <span>Inicio</span>
+        </a>
+        <a href="/publicar-servicio" class="nav-item">
+          <i class="nav-icon fas fa-plus-circle"></i>
+          <span>Publicar Servicio</span>
+        </a>
+        <a href="/vistas/mis-servicios.html" class="nav-item">
+          <i class="nav-icon fas fa-briefcase"></i>
+          <span>Mis Servicios</span>
+        </a>
+        <a href="/vistas/buscar-servicios.html" class="nav-item active">
+          <i class="nav-icon fas fa-search"></i>
+          <span>Buscar Servicios</span>
+        </a>
+        <a href="/vistas/contratos.html" class="nav-item">
+          <i class="fas fa-file-contract"></i>
+          <span>Contratos</span>
+        </a>
+        <a href="#" class="nav-item" data-page="messages">
+          <i class="nav-icon fas fa-comments"></i>
+          <span>Mensajes</span>
+        </a>
+        <a href="#" class="nav-item" data-page="wallet">
+          <i class="nav-icon fas fa-wallet"></i>
+          <span>Cartera</span>
+        </a>
+        <a href="/perfil" class="nav-item">
+          <i class="nav-icon fas fa-user"></i>
+          <span>Perfil</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="#" class="nav-item" id="logout-btn">
+          <i class="nav-icon fas fa-sign-out-alt"></i>
+          <span>Cerrar Sesión</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h2 class="page-title">Buscar Servicios</h2>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn" id="notifications-btn">
+            <i class="fas fa-bell"></i>
+            <span class="badge" id="notifications-count">0</span>
+          </button>
+          <div class="user-menu">
+            <img src="https://ui-avatars.com/api/?name=Usuario+Demo&background=6366f1&color=fff" alt="Usuario" class="avatar" id="user-avatar">
+            <span class="user-role" id="user-role-badge"></span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Search & Filters -->
+      <div style="padding: 24px 32px;">
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="card-body">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <input id="searchInput" type="text" class="input" placeholder="Buscar por título o descripción..." style="flex: 1; min-width: 280px;" />
+              <select id="categoryFilter" class="select" style="min-width: 200px;">
+                <option value="">Todas las categorías</option>
+                <option value="desarrollo">Desarrollo y Programación</option>
+                <option value="diseno">Diseño Gráfico</option>
+                <option value="marketing">Marketing Digital</option>
+                <option value="redaccion">Redacción y Traducción</option>
+                <option value="video">Video y Animación</option>
+                <option value="musica">Música y Audio</option>
+                <option value="consultoria">Consultoría</option>
+                <option value="otro">Otro</option>
+              </select>
+              <button id="searchBtn" class="btn-primary"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Grid -->
+        <div id="resultsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;"></div>
+        <div id="resultsMessage" class="helper" style="display:none; margin-top: 16px; text-align: center;"></div>
+      </div>
+    </main>
+
+    <script type="module" src="/js/buscar-servicios.js"></script>
+  </body>
+</html>

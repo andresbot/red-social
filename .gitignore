@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build outputs
+server/dist/
+server/build/
+
+# Environment variables
+.env
+.env.local
+.env.production
+server/.env
+server/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+*.log.*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Uploads (archivos subidos por usuarios)
+web/uploads/*
+!web/uploads/.gitkeep
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporal files
+*.tmp
+*.temp
+.cache/
+
+# PM2
+.pm2/
+
+# TypeScript
+*.tsbuildinfo

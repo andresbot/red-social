@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quetzal — Iniciar sesión</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet" />
+    <link href="/css/auth.css" rel="stylesheet" />
+  </head>
+  <body>
+    <main class="auth-container">
+      <section class="auth-card">
+        <header class="auth-header">
+          <i class="fa-solid fa-feather"></i>
+          <h1 class="logo">Quetzal</h1>
+        </header>
+        <div class="auth-body">
+          <h2 style="margin-bottom:12px;">Inicia sesión</h2>
+          <p class="helper" style="margin-bottom:16px;">Accede a tu cuenta para continuar.</p>
+          <form id="loginForm">
+            <div class="form-group">
+              <label class="form-label" for="email">Correo electrónico</label>
+              <input id="email" name="email" type="email" class="input" placeholder="tu@correo.com" required autocomplete="email" />
+              <div id="emailError" class="error" style="display:none;">Correo inválido</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="password">Contraseña</label>
+              <input id="password" name="password" type="password" class="input" placeholder="Tu contraseña" required minlength="8" autocomplete="current-password" />
+            </div>
+
+            <div class="actions">
+              <button id="submitBtn" type="submit" class="btn-primary">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                Entrar
+              </button>
+              <a class="link" href="register.html">Crear cuenta</a>
+              <a class="link" href="index.html">Inicio</a>
+            </div>
+            <div id="formMessage" class="helper" style="margin-top:10px;"></div>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/js/login.js"></script>
+  </body>
+</html>

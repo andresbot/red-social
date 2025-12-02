@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Perfil - Quetzal</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1 class="logo">
+          <i class="fas fa-feather-alt"></i>
+          Quetzal
+        </h1>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/vistas/index.html" class="nav-item">
+          <i class="nav-icon fas fa-home"></i>
+          <span>Inicio</span>
+        </a>
+        <a href="/vistas/publicar-servicio.html" class="nav-item">
+          <i class="nav-icon fas fa-plus-circle"></i>
+          <span>Publicar Servicio</span>
+        </a>
+        <a href="/vistas/mis-servicios.html" class="nav-item">
+          <i class="nav-icon fas fa-briefcase"></i>
+          <span>Mis Servicios</span>
+        </a>
+        <a href="/vistas/buscar-servicios.html" class="nav-item">
+          <i class="nav-icon fas fa-search"></i>
+          <span>Buscar Servicios</span>
+        </a>
+        <a href="/vistas/contratos.html" class="nav-item">
+          <i class="nav-icon fas fa-file-contract"></i>
+          <span>Contratos</span>
+        </a>
+        <a href="#" class="nav-item" data-page="messages">
+          <i class="nav-icon fas fa-comments"></i>
+          <span>Mensajes</span>
+        </a>
+        <a href="/vistas/perfil.html" class="nav-item active">
+          <i class="nav-icon fas fa-user-circle"></i>
+          <span>Mi Perfil</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-secondary" id="logoutBtn" style="width:100%;">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="content-header">
+        <h1><i class="fas fa-user-circle"></i> Mi Perfil</h1>
+        <div class="user-badge" id="roleBadge"></div>
+      </header>
+
+      <div style="max-width: 980px; margin: 0 auto; padding: 0 32px 32px;">
+        
+        <!-- Sección: Vista del Perfil -->
+        <div class="card" id="profileView">
+          <div class="card-body">
+            <div style="display: flex; gap: 24px; align-items: start; margin-bottom: 24px; flex-wrap: wrap;">
+              <!-- Avatar -->
+              <div style="flex-shrink: 0;">
+                <div style="position: relative;">
+                  <div id="profileAvatar" style="width: 120px; height: 120px; border-radius: 50%; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center; font-size: 48px; color: var(--primary); border: 4px solid var(--border);">
+                    <i class="fas fa-user"></i>
+                  </div>
+                  <span id="verifiedBadge" style="position: absolute; bottom: 5px; right: 5px; background: var(--success); color: white; width: 32px; height: 32px; border-radius: 50%; display: none; align-items: center; justify-content: center; border: 3px solid var(--bg-primary);">
+                    <i class="fas fa-check" style="font-size: 14px;"></i>
+                  </span>
+                </div>
+                <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                <button class="btn-secondary" id="uploadAvatarBtn" style="margin-top: 12px; width: 100%; font-size: 13px;">
+                  <i class="fas fa-camera"></i> Cambiar Foto
+                </button>
+              </div>
+
+              <!-- Info -->
+              <div style="flex: 1; min-width: 300px;">
+                <h2 id="profileName" style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">Cargando...</h2>
+                <p id="profileEmail" class="helper" style="font-size: 16px; margin-bottom: 16px;">
+                  <i class="fas fa-envelope"></i> <span>-</span>
+                </p>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+                  <span class="badge" id="profileRole">-</span>
+                  <span class="helper" id="profilePhone" style="display: none;">
+                    <i class="fas fa-phone"></i> <span>-</span>
+                  </span>
+                  <span class="helper" id="profileCity" style="display: none;">
+                    <i class="fas fa-map-marker-alt"></i> <span>-</span>
+                  </span>
+                </div>
+                <button class="btn-primary" id="editProfileBtn">
+                  <i class="fas fa-edit"></i> Editar Perfil
+                </button>
+              </div>
+            </div>
+
+            <!-- Bio -->
+            <div id="profileBioContainer" style="display: none; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">
+                <i class="fas fa-quote-left"></i> Sobre mí
+              </h3>
+              <p id="profileBio" style="color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap;">-</p>
+            </div>
+
+            <!-- Website -->
+            <div id="profileWebsiteContainer" style="display: none; margin-top: 16px;">
+              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">
+                <i class="fas fa-globe"></i> Sitio Web
+              </h3>
+              <a id="profileWebsite" href="#" target="_blank" style="color: var(--primary); text-decoration: none;">-</a>
+            </div>
+
+            <!-- Social Links -->
+            <div id="profileSocialLinks" style="margin-top: 16px; display: none;">
+              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">
+                <i class="fas fa-share-alt"></i> Redes Sociales
+              </h3>
+              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="#" id="linkedinLink" target="_blank" class="icon-btn" style="display: none;" title="LinkedIn">
+                  <i class="fab fa-linkedin" style="color: #0077b5; font-size: 20px;"></i>
+                </a>
+                <a href="#" id="githubLink" target="_blank" class="icon-btn" style="display: none;" title="GitHub">
+                  <i class="fab fa-github" style="color: #333; font-size: 20px;"></i>
+                </a>
+                <a href="#" id="twitterLink" target="_blank" class="icon-btn" style="display: none;" title="Twitter">
+                  <i class="fab fa-twitter" style="color: #1da1f2; font-size: 20px;"></i>
+                </a>
+                <a href="#" id="portfolioLink" target="_blank" class="icon-btn" style="display: none;" title="Portfolio">
+                  <i class="fas fa-briefcase" style="color: var(--primary); font-size: 20px;"></i>
+                </a>
+              </div>
+            </div>
+
+            <!-- Skills -->
+            <div id="skillsSection" style="margin-top: 24px; display: none;">
+              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">
+                <i class="fas fa-tools"></i> Habilidades
+              </h3>
+              <div id="skillsList" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <!-- Skills badges -->
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+              <div style="text-align: center; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                <div style="font-size: 28px; font-weight: 700; color: var(--primary);" id="statsServices">0</div>
+                <div class="helper">Servicios Publicados</div>
+              </div>
+              <div style="text-align: center; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                <div style="font-size: 28px; font-weight: 700; color: var(--success);" id="statsContracts">0</div>
+                <div class="helper">Contratos Completados</div>
+              </div>
+              <div style="text-align: center; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                <div style="font-size: 28px; font-weight: 700; color: var(--warning);">
+                  <span id="statsRating">-</span>
+                  <span id="statsRatingCount" style="font-size: 14px; color: var(--text-tertiary); margin-left: 4px;"></span>
+                </div>
+                <div class="helper">Calificación</div>
+              </div>
+              <div style="text-align: center; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                <div style="font-size: 28px; font-weight: 700; color: var(--info);" id="statsViews">0</div>
+                <div class="helper">Vistas Totales</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Editar Perfil -->
+        <div class="card" id="profileEdit" style="display: none;">
+          <div class="card-body">
+            <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">
+              <i class="fas fa-edit"></i> Editar Perfil
+            </h2>
+
+            <form id="editForm" class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="edit_full_name">
+                  <i class="fas fa-user"></i> Nombre Completo *
+                </label>
+                <input type="text" id="edit_full_name" class="input" required minlength="3" maxlength="255">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit_user_type">
+                  <i class="fas fa-user-tag"></i> Tipo de Usuario *
+                </label>
+                <select id="edit_user_type" class="input">
+                  <option value="consumer">Cliente</option>
+                  <option value="provider">Proveedor</option>
+                  <option value="both">Cliente y Proveedor</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit_phone">
+                  <i class="fas fa-phone"></i> Teléfono
+                </label>
+                <input type="tel" id="edit_phone" class="input" placeholder="+57 300 123 4567">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit_city">
+                  <i class="fas fa-map-marker-alt"></i> Ciudad
+                </label>
+                <input type="text" id="edit_city" class="input" placeholder="Bogotá">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit_website">
+                  <i class="fas fa-globe"></i> Sitio Web
+                </label>
+                <input type="url" id="edit_website" class="input" placeholder="https://ejemplo.com">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit_linkedin">
+                  <i class="fab fa-linkedin"></i> LinkedIn
+                </label>
+                <input type="url" id="edit_linkedin" class="input" placeholder="https://linkedin.com/in/usuario">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit_github">
+                  <i class="fab fa-github"></i> GitHub
+                </label>
+                <input type="url" id="edit_github" class="input" placeholder="https://github.com/usuario">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit_twitter">
+                  <i class="fab fa-twitter"></i> Twitter
+                </label>
+                <input type="url" id="edit_twitter" class="input" placeholder="https://twitter.com/usuario">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="edit_portfolio">
+                  <i class="fas fa-briefcase"></i> Portfolio
+                </label>
+                <input type="url" id="edit_portfolio" class="input" placeholder="https://miportfolio.com">
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label" for="edit_bio">
+                  <i class="fas fa-quote-left"></i> Biografía
+                </label>
+                <textarea id="edit_bio" class="input" rows="4" maxlength="500" placeholder="Cuéntanos sobre ti..."></textarea>
+                <small class="helper">Máximo 500 caracteres</small>
+              </div>
+
+              <div class="form-group" id="skillsEditSection" style="grid-column: 1 / -1; display: none;">
+                <label class="form-label">
+                  <i class="fas fa-tools"></i> Habilidades
+                </label>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                  <input type="text" id="skillInput" class="input" placeholder="Ej: JavaScript, Diseño UX..." style="flex: 1;">
+                  <button type="button" class="btn-primary" id="addSkillBtn">
+                    <i class="fas fa-plus"></i> Agregar
+                  </button>
+                </div>
+                <div id="skillsEditList" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                  <!-- Skills editables -->
+                </div>
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <div id="editMessage" class="helper" style="display: none; padding: 12px; border-radius: var(--radius-md); margin-bottom: 16px;"></div>
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" id="cancelEditBtn">
+                    <i class="fas fa-times"></i> Cancelar
+                  </button>
+                  <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Sección: Preferencias de Notificaciones -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h2><i class="fas fa-bell"></i> Preferencias de Notificaciones</h2>
+          </div>
+          <div class="card-body">
+            <form id="notificationPreferencesForm" style="display: grid; gap: 16px;">
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="pref_email_transactions" checked>
+                <div>
+                  <div style="font-weight: 500;">Email de Transacciones</div>
+                  <div class="helper" style="font-size: 13px;">Recibir notificaciones sobre pagos y contratos</div>
+                </div>
+              </label>
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="pref_email_messages" checked>
+                <div>
+                  <div style="font-weight: 500;">Email de Mensajes</div>
+                  <div class="helper" style="font-size: 13px;">Recibir notificaciones de nuevos mensajes</div>
+                </div>
+              </label>
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="pref_email_services">
+                <div>
+                  <div style="font-weight: 500;">Email de Servicios</div>
+                  <div class="helper" style="font-size: 13px;">Notificaciones sobre tus servicios publicados</div>
+                </div>
+              </label>
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="pref_email_marketing">
+                <div>
+                  <div style="font-weight: 500;">Email Marketing</div>
+                  <div class="helper" style="font-size: 13px;">Recibir ofertas y novedades de la plataforma</div>
+                </div>
+              </label>
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="pref_push_enabled" checked>
+                <div>
+                  <div style="font-weight: 500;">Notificaciones Push</div>
+                  <div class="helper" style="font-size: 13px;">Permitir notificaciones en el navegador</div>
+                </div>
+              </label>
+              <div id="notificationMessage" class="helper" style="display: none; padding: 12px; border-radius: var(--radius-md); margin-top: 8px;"></div>
+              <button type="submit" class="btn-primary" style="width: fit-content;">
+                <i class="fas fa-save"></i> Guardar Preferencias
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Sección: Privacidad -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h2><i class="fas fa-shield-alt"></i> Configuración de Privacidad</h2>
+          </div>
+          <div class="card-body">
+            <form id="privacySettingsForm" style="display: grid; gap: 16px;">
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="privacy_show_email">
+                <div>
+                  <div style="font-weight: 500;">Mostrar Email</div>
+                  <div class="helper" style="font-size: 13px;">Tu email será visible en tu perfil público</div>
+                </div>
+              </label>
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="privacy_show_phone">
+                <div>
+                  <div style="font-weight: 500;">Mostrar Teléfono</div>
+                  <div class="helper" style="font-size: 13px;">Tu teléfono será visible en tu perfil público</div>
+                </div>
+              </label>
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="privacy_public_profile" checked>
+                <div>
+                  <div style="font-weight: 500;">Perfil Público</div>
+                  <div class="helper" style="font-size: 13px;">Permitir que otros usuarios vean tu perfil</div>
+                </div>
+              </label>
+              <div id="privacyMessage" class="helper" style="display: none; padding: 12px; border-radius: var(--radius-md); margin-top: 8px;"></div>
+              <button type="submit" class="btn-primary" style="width: fit-content;">
+                <i class="fas fa-save"></i> Guardar Configuración
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Sección: Cambiar Contraseña -->
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-body">
+            <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">
+              <i class="fas fa-key"></i> Cambiar Contraseña
+            </h2>
+            <form id="passwordForm" class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="current_password">Contraseña Actual *</label>
+                <input type="password" id="current_password" class="input" required minlength="8">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="new_password">Nueva Contraseña *</label>
+                <input type="password" id="new_password" class="input" required minlength="8">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="confirm_password">Confirmar Nueva Contraseña *</label>
+                <input type="password" id="confirm_password" class="input" required minlength="8">
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <div id="passwordMessage" class="helper" style="display: none; padding: 12px; border-radius: var(--radius-md); margin-bottom: 16px;"></div>
+                <button type="submit" class="btn-primary">
+                  <i class="fas fa-lock"></i> Actualizar Contraseña
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/js/perfil.js"></script>
+</body>
+</html>
