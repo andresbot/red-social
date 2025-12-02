@@ -907,4 +907,73 @@ UNION ALL SELECT 'Conversaciones', COUNT(*) FROM conversations;
 -- Mostrar métricas
 SELECT * FROM platform_metrics;
 
-COMMENT ON DATABASE current_database() IS 'Estructura Quetzal Platform con ledger doble entrada y unidades enteras (QZ halves, COP cents)';
+ALTER TABLE services ADD COLUMN IF NOT EXISTS image_url TEXT;
+
+ALTER TYPE contract_status ADD VALUE IF NOT EXISTS 'accepted';
+ALTER TYPE contract_status ADD VALUE IF NOT EXISTS 'rejected';
+
+-- Migration: Add profile enhancements
+-- Date: 2024-12-02
+-- Description: Add privacy settings and missing triggers
+
+-- Add bio length constraint (si no existe)
+DO $$ 
+BEGIN
+    ALTER TABLE users ADD CONSTRAINT bio_length_check CHECK (length(bio) <= 500);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- Create privacy_settings table
+CREATE TABLE IF NOT EXISTS privacy_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    show_email BOOLEAN DEFAULT FALSE,
+    show_phone BOOLEAN DEFAULT FALSE,
+    public_profile BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create trigger for privacy_settings updated_at
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_privacy_settings_updated_at'
+    ) THEN
+        CREATE TRIGGER update_privacy_settings_updated_at
+            BEFORE UPDATE ON privacy_settings
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
+
+-- Create index
+CREATE INDEX IF NOT EXISTS idx_privacy_settings_user_id ON privacy_settings(user_id);
+
+-- Insert default privacy settings for existing users
+INSERT INTO privacy_settings (user_id, show_email, show_phone, public_profile)
+SELECT id, FALSE, FALSE, TRUE
+FROM users
+WHERE id NOT IN (SELECT user_id FROM privacy_settings)
+ON CONFLICT (user_id) DO NOTHING;
+
+COMMENT ON TABLE privacy_settings IS 'User privacy and visibility settings';
+
+
+
+-- Agregar columnas de social links a users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS github VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS twitter VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio VARCHAR(255);
+
+-- Agregar constraint de bio length
+DO $$ 
+BEGIN
+    ALTER TABLE users ADD CONSTRAINT bio_length_check CHECK (length(bio) <= 500);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+
+--COMMENT ON DATABASE current_database() IS 'Estructura Quetzal Platform con ledger doble entrada y unidades enteras (QZ halves, COP cents)';
