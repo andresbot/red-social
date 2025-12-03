@@ -159,7 +159,7 @@ SELECT * FROM contracts ORDER BY created_at DESC LIMIT 10;
 pm2 logs quetzal --lines 100
 
 # Verificar puerto no esté en uso
-lsof -i :3001
+lsof -i :3000
 
 # Verificar conexión a BD
 psql -U <user> -d quetzal_db -c "SELECT 1"
@@ -222,7 +222,7 @@ pm2 restart quetzal
 2. **Configurar Nginx como proxy inverso**
    ```nginx
    upstream quetzal_backend {
-       server 127.0.0.1:3001;
+    server 127.0.0.1:3000;
    }
    
    server {

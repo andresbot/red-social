@@ -227,6 +227,11 @@ function renderProfile(user) {
   } else if (viewServicesBtn) {
     viewServicesBtn.style.display = 'none';
   }
+
+  // Cargar reseñas realizadas si es consumidor o ambos
+  if (userRole === 'consumer' || userRole === 'both') {
+    loadUserRatingsGiven();
+  }
 }
 
 async function loadUserStats() {
@@ -252,19 +257,98 @@ async function loadUserStats() {
     }
 
     // Rating
-    const ratingRes = await fetch(`/users/${userId}/rating`, { headers });
-    if (ratingRes.ok) {
-      const ratingData = await ratingRes.json();
-      if (ratingData.average_rating) {
-        document.getElementById('statsRating').textContent = ratingData.average_rating.toFixed(1);
-        document.getElementById('statsRatingCount').textContent = `(${ratingData.total_ratings})`;
-      } else {
-        document.getElementById('statsRating').textContent = 'N/A';
-      }
+    const ratingsAggRes = await fetch(`/ratings/user/${userId}?limit=5&offset=0`, { headers });
+    if (ratingsAggRes.ok) {
+      const ratingsData = await ratingsAggRes.json();
+      const avg = ratingsData.avg ? Number(ratingsData.avg).toFixed(1) : 'N/A';
+      const total = ratingsData.total || 0;
+      document.getElementById('statsRating').textContent = avg;
+      document.getElementById('statsRatingCount').textContent = `(${total})`;
+      // Render sección y lista
+      renderUserRatings(ratingsData.items || [], avg, total);
     }
   } catch (err) {
     console.error('Load stats error:', err);
   }
+}
+
+async function loadUserRatingsGiven() {
+  try {
+    const token = localStorage.getItem('token');
+    const headers = { 'Accept': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`/ratings/by-user/${userId}?limit=10&offset=0`, { headers });
+    if (!res.ok) return;
+    const data = await res.json();
+    renderUserRatingsGiven(data.items || [], data.avg ? Number(data.avg).toFixed(1) : 'N/A', data.total || 0);
+  } catch (e) {
+    // noop
+  }
+}
+
+function renderUserRatingsGiven(items, avg, total) {
+  const section = document.getElementById('ratingsGivenSection');
+  const summary = document.getElementById('ratingsGivenSummary');
+  const list = document.getElementById('ratingsGivenList');
+  if (!section || !summary || !list) return;
+  section.style.display = 'block';
+  summary.textContent = `Promedio dado: ${avg} (${total} reseñas realizadas)`;
+  list.innerHTML = '';
+
+  if (!items || items.length === 0) {
+    list.innerHTML = '<div class="helper">Aún no has realizado reseñas.</div>';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  items.forEach(r => {
+    const item = document.createElement('div');
+    item.style.borderTop = '1px solid var(--border)';
+    item.style.padding = '12px 0';
+    const stars = Array.from({ length: 5 }).map((_, i) => `<i class="fas fa-star" style="color:${i < r.rating ? '#f59e0b' : '#cbd5e1'}"></i>`).join(' ');
+    item.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;">${stars}<span class="helper">${new Date(r.created_at).toLocaleDateString()}</span></div>
+        <a href="/detalle-servicio?id=${r.service_id}" class="helper" style="text-decoration:none;">${r.title || 'Ver servicio'}</a>
+      </div>
+      ${r.comment ? `<div style="color:var(--text-secondary);margin-top:6px;">${r.comment}</div>` : ''}
+    `;
+    frag.appendChild(item);
+  });
+  list.appendChild(frag);
+}
+
+function renderUserRatings(items, avg, total) {
+  const section = document.getElementById('ratingsSection');
+  const summary = document.getElementById('ratingsSummary');
+  const list = document.getElementById('ratingsList');
+  if (!section || !summary || !list) return;
+  section.style.display = 'block';
+  summary.textContent = `Promedio: ${avg} (${total} reseñas)`;
+  list.innerHTML = '';
+
+  if (!items || items.length === 0) {
+    list.innerHTML = '<div class="helper">Aún no hay reseñas para este proveedor.</div>';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  items.forEach(r => {
+    const item = document.createElement('div');
+    item.style.borderTop = '1px solid var(--border)';
+    item.style.padding = '12px 0';
+    const stars = Array.from({ length: 5 }).map((_, i) => `<i class="fas fa-star" style="color:${i < r.rating ? '#f59e0b' : '#cbd5e1'}"></i>`).join(' ');
+    item.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;">${stars}<span class="helper">${new Date(r.created_at).toLocaleDateString()}</span></div>
+        <a href="/detalle-servicio?id=${r.service_id}" class="helper" style="text-decoration:none;">${r.title || 'Ver servicio'}</a>
+      </div>
+      ${r.comment ? `<div style="color:var(--text-secondary);margin-top:6px;">${r.comment}</div>` : ''}
+    `;
+    frag.appendChild(item);
+  });
+  list.appendChild(frag);
 }
 
 async function loadUserSkills() {
@@ -302,14 +386,29 @@ async function loadUserServices() {
       const services = await res.json();
       if (Array.isArray(services) && services.length > 0) {
         const servicesList = document.getElementById('servicesList');
-        servicesList.innerHTML = services.map(service => {
+        // Render con promedio de rating
+        const parts = await Promise.all(services.map(async service => {
           const price = (service.price_qz_halves / 2).toFixed(1);
+          let ratingAvg = null;
+          let ratingCount = null;
+          try {
+            const rres = await fetch(`/ratings/service/${service.id}?limit=0`);
+            if (rres.ok) {
+              const rdata = await rres.json();
+              ratingAvg = rdata.avg ? Number(rdata.avg.toFixed(1)) : null;
+              ratingCount = rdata.total ?? null;
+            }
+          } catch {}
           return `
             <div class="service-card" onclick="window.location.href='/detalle-servicio?id=${service.id}'" style="cursor:pointer;">
               <div class="service-image" style="background-image: url('${service.image_url || ''}'); background-size: cover; background-position: center; height: 150px; border-radius: 8px 8px 0 0;"></div>
               <div class="service-content" style="padding: 12px;">
                 <h3 style="font-size: 16px; margin-bottom: 8px;">${service.title}</h3>
                 <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 12px;">${(service.description || '').substring(0, 100)}...</p>
+                ${ratingAvg !== null ? `<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                  <i class="fas fa-star" style="color:#f59e0b;"></i>
+                  <span style="font-size: 13px; color: var(--text-secondary);">${ratingAvg} (${ratingCount} reseñas)</span>
+                </div>` : ''}
                 <div class="service-meta" style="display: flex; justify-content: space-between; align-items: center;">
                   <span class="service-price" style="font-weight: 700; color: var(--primary); font-size: 18px;">${price} QZ</span>
                   <span class="service-category" style="background: var(--bg-secondary); padding: 4px 8px; border-radius: 8px; font-size: 12px; text-transform: capitalize;">${service.category}</span>
@@ -317,7 +416,8 @@ async function loadUserServices() {
               </div>
             </div>
           `;
-        }).join('');
+        }));
+        servicesList.innerHTML = parts.join('');
         document.getElementById('servicesSection').style.display = 'block';
       }
     }

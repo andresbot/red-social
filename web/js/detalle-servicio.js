@@ -137,6 +137,9 @@ function renderServiceDetail(svc) {
       }
     });
   }
+
+  // Cargar reseñas del servicio
+  loadServiceRatings(svc.id);
 }
 
 async function loadProviderInfo(userId) {
@@ -207,4 +210,41 @@ if (backBtn) {
   backBtn.addEventListener('click', () => {
     window.history.back();
   });
+}
+
+async function loadServiceRatings(serviceId) {
+  const summaryEl = document.getElementById('ratingsSummary');
+  const listEl = document.getElementById('ratingsList');
+  if (!summaryEl || !listEl) return;
+  summaryEl.textContent = 'Cargando reseñas...';
+  listEl.innerHTML = '';
+  try {
+    const res = await fetch(`/ratings/service/${serviceId}?limit=10&offset=0`);
+    if (!res.ok) throw new Error('No se pudieron cargar reseñas');
+    const data = await res.json();
+    const avg = data.avg ? Number(data.avg).toFixed(1) : '0.0';
+    const total = data.total || 0;
+    summaryEl.textContent = `Promedio: ${avg} (${total} reseñas)`;
+
+    if (!data.items || data.items.length === 0) {
+      listEl.innerHTML = `<div class="helper">Aún no hay reseñas para este servicio.</div>`;
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    data.items.forEach(r => {
+      const item = document.createElement('div');
+      item.style.borderTop = '1px solid var(--border)';
+      item.style.padding = '12px 0';
+      const stars = Array.from({ length: 5 }).map((_, i) => `<i class="fas fa-star" style="color:${i < r.rating ? '#f59e0b' : '#cbd5e1'}"></i>`).join(' ');
+      item.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">${stars}<span class="helper">${new Date(r.created_at).toLocaleDateString()}</span></div>
+        ${r.comment ? `<div style="color:var(--text-secondary);">${r.comment}</div>` : ''}
+      `;
+      frag.appendChild(item);
+    });
+    listEl.appendChild(frag);
+  } catch (e) {
+    summaryEl.textContent = 'No se pudieron cargar reseñas';
+  }
 }

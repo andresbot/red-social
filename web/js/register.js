@@ -10,6 +10,7 @@ async function handleSubmit(e) {
   const email = $('email').value.trim();
   const password = $('password').value;
   const confirm = $('confirm').value;
+  const city = $('city').value.trim();
   const user_type = 'both';
   const submitBtn = $('submitBtn');
   const emailError = $('emailError');
@@ -25,6 +26,11 @@ async function handleSubmit(e) {
     formMessage.textContent = 'El nombre debe tener al menos 3 caracteres';
     return;
   }
+  if (!city || city.length < 2) {
+    formMessage.className = 'error';
+    formMessage.textContent = 'La ciudad es obligatoria';
+    return;
+  }
   if (!Utils.isValidEmail(email)) {
     emailError.style.display = 'block';
     return;
@@ -34,7 +40,7 @@ async function handleSubmit(e) {
     return;
   }
 
-  const payload = { full_name, email, password, user_type };
+  const payload = { full_name, email, password, user_type, city };
 
   submitBtn.disabled = true;
   formMessage.textContent = 'Creando cuenta...';

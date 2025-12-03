@@ -10,6 +10,11 @@ import { usersRouter } from './modules/users/routes';
 import { servicesRouter } from './modules/services/routes';
 import { messagingRouter, initMessagingSocket } from './modules/messaging/ws';
 import { contractsRouter } from './modules/contracts/routes';
+import { serviceRequestsRouter } from './modules/service-requests/routes';
+import { paymentsRouter } from './modules/payments/routes';
+import { walletRouter } from './modules/wallet/routes';
+import webhooksRouter from './modules/webhooks/routes';
+import { ratingsRouter } from './modules/ratings/routes';
 
 const app = express();
 const server = http.createServer(app);
@@ -79,6 +84,10 @@ app.get('/ver-perfil', (_req, res) => {
   res.sendFile(path.join(webPath, 'vistas', 'ver-perfil.html'));
 });
 
+app.get('/cartera', (_req, res) => {
+  res.sendFile(path.join(webPath, 'vistas', 'cartera.html'));
+});
+
 // Health
 app.get('/health', async (_req, res) => {
   try {
@@ -94,6 +103,11 @@ app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/services', servicesRouter);
 app.use('/contracts', contractsRouter);
+app.use('/service-requests', serviceRequestsRouter);
+app.use('/payments', paymentsRouter);
+app.use('/wallet', walletRouter);
+app.use('/webhooks', webhooksRouter);
+app.use('/ratings', ratingsRouter);
 app.use('/messaging', messagingRouter);
 
 // Sockets

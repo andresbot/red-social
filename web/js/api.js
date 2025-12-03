@@ -100,6 +100,28 @@ export const API = {
         }
     },
     
+    // PATCH request
+    async patch(endpoint, data) {
+        try {
+            const response = await fetch(`${CONFIG.API_BASE_URL}${endpoint}`, {
+                method: 'PATCH',
+                headers: this.getHeaders(),
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('PATCH Error:', error);
+            Utils.showToast('Error al actualizar', 'error');
+            throw error;
+        }
+    },
+    
     // DELETE request
     async delete(endpoint) {
         try {

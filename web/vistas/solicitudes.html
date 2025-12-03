@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quetzal — Solicitudes</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1 class="logo">Quetzal</h1>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/vistas/index.html" class="nav-item"><i class="nav-icon fas fa-home"></i><span>Inicio</span></a>
+        <a href="/vistas/buscar-servicios.html" class="nav-item"><i class="nav-icon fas fa-search"></i><span>Buscar Servicios</span></a>
+        <a href="/vistas/contratos.html" class="nav-item"><i class="nav-icon fas fa-file-contract"></i><span>Contratos</span></a>
+        <a href="/vistas/solicitudes.html" class="nav-item active"><i class="nav-icon fas fa-handshake"></i><span>Solicitudes</span></a>
+        <a href="/perfil" class="nav-item"><i class="nav-icon fas fa-user"></i><span>Perfil</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="#" class="nav-item" id="logout-btn"><i class="nav-icon fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="header">
+        <div class="header-left"><h2 class="page-title">Solicitudes</h2></div>
+        <div class="header-right">
+          <div class="user-menu">
+            <img src="https://ui-avatars.com/api/?name=Usuario+Demo&background=6366f1&color=fff" alt="Usuario" class="avatar" id="user-avatar">
+            <span class="user-role" id="user-role-badge"></span>
+          </div>
+        </div>
+      </header>
+
+      <div style="padding: 24px 32px 0;">
+        <div style="display:flex; gap:12px; border-bottom: 2px solid var(--border); margin-bottom: 24px;">
+          <button class="tab-btn active" data-role="client"><i class="fas fa-shopping-cart"></i> Como Cliente</button>
+          <button class="tab-btn" data-role="provider"><i class="fas fa-briefcase"></i> Como Proveedor</button>
+        </div>
+      </div>
+
+      <div style="padding: 0 32px 32px;">
+        <div id="requestsList"></div>
+        <div id="requestsMessage" class="helper" style="display:none; text-align: center; margin-top: 32px;"></div>
+      </div>
+    </main>
+
+    <script type="module" src="/js/solicitudes.js"></script>
+  </body>
+</html>

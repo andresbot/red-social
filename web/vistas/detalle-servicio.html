@@ -38,7 +38,7 @@
           <i class="nav-icon fas fa-comments"></i>
           <span>Mensajes</span>
         </a>
-        <a href="#" class="nav-item" data-page="wallet">
+        <a href="/cartera" class="nav-item" data-page="wallet">
           <i class="nav-icon fas fa-wallet"></i>
           <span>Cartera</span>
         </a>
@@ -80,6 +80,15 @@
       <!-- Service Detail -->
       <div style="padding: 32px; max-width: 1200px; margin: 0 auto;">
         <div id="serviceDetail"></div>
+        <div class="card" style="margin-top:24px;">
+          <div class="card-body">
+            <h3 style="font-size:18px;font-weight:600;margin-bottom:12px;">
+              <i class="fas fa-star" style="color:#f59e0b;"></i> Reseñas
+            </h3>
+            <div id="ratingsSummary" class="helper" style="margin-bottom:12px;">Cargando reseñas...</div>
+            <div id="ratingsList"></div>
+          </div>
+        </div>
         <div id="detailMessage" class="helper" style="display:none; text-align: center; margin-top: 32px;"></div>
       </div>
     </main>

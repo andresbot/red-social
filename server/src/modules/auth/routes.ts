@@ -6,11 +6,11 @@ export const authRouter = Router();
 
 authRouter.post('/register', async (req, res) => {
   try {
-    const { email, password, full_name } = req.body;
+    const { email, password, full_name, city } = req.body;
     const user_type = 'both';
     
     // Validación de campos
-    if (!email || !password || !full_name) {
+    if (!email || !password || !full_name || !city) {
       return res.status(400).json({ error: 'Missing fields' });
     }
     // user_type por defecto 'both'
@@ -20,8 +20,8 @@ authRouter.post('/register', async (req, res) => {
     
     // Insertar usuario
     const r = await pool.query(
-      'INSERT INTO users (email, password, full_name, user_type) VALUES ($1, $2, $3, $4) RETURNING id, email, full_name, user_type',
-      [email, hash, full_name, user_type]
+      'INSERT INTO users (email, password, full_name, user_type, city) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, full_name, user_type, city',
+      [email, hash, full_name, user_type, city]
     );
     
     // Generar token

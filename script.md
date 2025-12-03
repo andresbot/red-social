@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
-    city VARCHAR(100),
+    city VARCHAR(100) NOT NUll,
     user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('provider', 'consumer', 'both')),
     avatar TEXT,
     bio TEXT,
@@ -912,6 +912,14 @@ ALTER TABLE services ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TYPE contract_status ADD VALUE IF NOT EXISTS 'accepted';
 ALTER TYPE contract_status ADD VALUE IF NOT EXISTS 'rejected';
 
+
+
+
+
+
+
+
+
 -- Migration: Add profile enhancements
 -- Date: 2024-12-02
 -- Description: Add privacy settings and missing triggers
@@ -974,6 +982,53 @@ BEGIN
     ALTER TABLE users ADD CONSTRAINT bio_length_check CHECK (length(bio) <= 500);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
-
-
 --COMMENT ON DATABASE current_database() IS 'Estructura Quetzal Platform con ledger doble entrada y unidades enteras (QZ halves, COP cents)';
+
+
+
+
+
+UPDATE users
+SET city = 'Unknown'
+WHERE city IS NULL;
+
+ALTER TABLE users
+ALTER COLUMN city SET NOT NULL;
+
+
+
+-- Función: crear cuentas ledger para nuevos escrows
+CREATE OR REPLACE FUNCTION create_escrow_ledger_accounts()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Cuenta QZ para el escrow
+    IF NOT EXISTS (
+        SELECT 1 FROM accounts 
+        WHERE owner_type = 'escrow' AND owner_id = NEW.id AND currency = 'QZ'
+    ) THEN
+        INSERT INTO accounts (owner_type, owner_id, currency, name)
+        VALUES ('escrow', NEW.id, 'QZ', 'escrow_qz_' || NEW.id::text);
+    END IF;
+
+    -- Cuenta COP para el escrow (por si se usa COP en algún flujo)
+    IF NOT EXISTS (
+        SELECT 1 FROM accounts 
+        WHERE owner_type = 'escrow' AND owner_id = NEW.id AND currency = 'COP'
+    ) THEN
+        INSERT INTO accounts (owner_type, owner_id, currency, name)
+        VALUES ('escrow', NEW.id, 'COP', 'escrow_cop_' || NEW.id::text);
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger: crear cuentas al insertar en escrow_accounts
+CREATE TRIGGER trigger_create_escrow_ledger_accounts
+AFTER INSERT ON escrow_accounts
+FOR EACH ROW
+EXECUTE FUNCTION create_escrow_ledger_accounts();
+
+
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMP;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP;

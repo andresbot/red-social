@@ -22,7 +22,19 @@ const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } });
 
 servicesRouter.get('/', optionalAuth, async (req: AuthRequest, res) => {
   try {
-    const { user_id } = req.query;
+    const { 
+      user_id, 
+      search,
+      category,
+      priceMin, 
+      priceMax, 
+      minRating,
+      city,
+      sortBy = 'created_at',
+      sortOrder = 'DESC',
+      limit = '20',
+      offset = '0'
+    } = req.query;
     
     // Si se solicita servicios de un usuario específico (query parameter)
     if (user_id) {
@@ -34,8 +46,8 @@ servicesRouter.get('/', optionalAuth, async (req: AuthRequest, res) => {
       return res.json(r.rows);
     }
     
-    // Si el usuario está autenticado y no hay filtro, devolver sus servicios (activos e inactivos)
-    if (req.userId) {
+    // Si el usuario está autenticado y no hay otros filtros, devolver sus servicios (activos e inactivos)
+    if (req.userId && !search && !category && !priceMin && !priceMax && !minRating && !city) {
       const r = await pool.query(
         'SELECT id, user_id, title, category, description, price_qz_halves, delivery_time, requirements, image_url, status FROM services WHERE user_id=$1 ORDER BY created_at DESC',
         [req.userId]
@@ -43,12 +55,119 @@ servicesRouter.get('/', optionalAuth, async (req: AuthRequest, res) => {
       return res.json(r.rows);
     }
     
-    // Si no hay autenticación ni filtro, devolver todos los servicios activos
-    const r = await pool.query(
-      'SELECT id, user_id, title, category, description, price_qz_halves, delivery_time, requirements, image_url, status FROM services WHERE status=$1 ORDER BY created_at DESC',
-      ['active']
-    );
-    res.json(r.rows);
+    // Búsqueda avanzada con filtros
+    const conditions: string[] = ['status = $1'];
+    const values: any[] = ['active'];
+    let paramIndex = 2;
+    
+    // Filtro de búsqueda por texto (título o descripción)
+    if (search && typeof search === 'string') {
+      conditions.push(`(title ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`);
+      values.push(`%${search}%`);
+      paramIndex++;
+    }
+    
+    // Filtro por categoría
+    if (category && typeof category === 'string') {
+      conditions.push(`category = $${paramIndex}`);
+      values.push(category);
+      paramIndex++;
+    }
+    
+    // Filtro por precio mínimo
+    if (priceMin && typeof priceMin === 'string') {
+      const minHalves = parseFloat(priceMin) * 2; // Convertir QZ a halves
+      conditions.push(`price_qz_halves >= $${paramIndex}`);
+      values.push(minHalves);
+      paramIndex++;
+    }
+    
+    // Filtro por precio máximo
+    if (priceMax && typeof priceMax === 'string') {
+      const maxHalves = parseFloat(priceMax) * 2; // Convertir QZ a halves
+      conditions.push(`price_qz_halves <= $${paramIndex}`);
+      values.push(maxHalves);
+      paramIndex++;
+    }
+    
+    // Filtro por calificación mínima (usar vista de agregados user_service_stats)
+    if (minRating && typeof minRating === 'string') {
+      conditions.push(`COALESCE(stats.avg_rating, 0) >= $${paramIndex}`);
+      values.push(parseFloat(minRating));
+      paramIndex++;
+    }
+    
+    // Filtro por ciudad (join con users para obtener city)
+    if (city && typeof city === 'string') {
+      conditions.push(`u.city ILIKE $${paramIndex}`);
+      values.push(`%${city}%`);
+      paramIndex++;
+    }
+    
+    // Validar sortBy para prevenir SQL injection
+    const validSortFields = ['created_at', 'price_qz_halves', 'title', 'rating'];
+    const sortField = validSortFields.includes(sortBy as string) ? (sortBy as string) : 'created_at';
+    const sortDirection = sortOrder === 'ASC' ? 'ASC' : 'DESC';
+
+    // Determinar JOINs necesarios
+    const joinUsers = !!city; // ciudad requiere JOIN a users
+    const joinStats = !!minRating || sortField === 'rating'; // rating requiere vista de agregados
+
+    let query: string;
+    if (joinUsers || joinStats) {
+      const selectFields = `
+        s.id, s.user_id, s.title, s.category, s.description, s.price_qz_halves,
+        s.delivery_time, s.requirements, s.image_url, s.status, s.created_at,
+        COALESCE(stats.avg_rating, 0) AS user_rating`;
+
+      let fromClause = `FROM services s`;
+      if (joinUsers) fromClause += ` JOIN users u ON s.user_id = u.id`;
+      if (joinStats) fromClause += ` LEFT JOIN user_service_stats stats ON stats.user_id = s.user_id`;
+
+      const orderByClause = sortField === 'rating' ? `COALESCE(stats.avg_rating, 0)` : `s.${sortField}`;
+
+      query = `
+        SELECT ${selectFields}
+        ${fromClause}
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY ${orderByClause} ${sortDirection}
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      `;
+    } else {
+      query = `
+        SELECT id, user_id, title, category, description, price_qz_halves,
+               delivery_time, requirements, image_url, status, created_at
+        FROM services
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY ${sortField} ${sortDirection}
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      `;
+    }
+    
+    values.push(parseInt(limit as string), parseInt(offset as string));
+    
+    const r = await pool.query(query, values);
+    
+    // Obtener total de resultados para paginación
+    let countQuery: string;
+    if (joinUsers || joinStats) {
+      let fromCount = `FROM services s`;
+      if (joinUsers) fromCount += ` JOIN users u ON s.user_id = u.id`;
+      if (joinStats) fromCount += ` LEFT JOIN user_service_stats stats ON stats.user_id = s.user_id`;
+      countQuery = `SELECT COUNT(*) ${fromCount} WHERE ${conditions.join(' AND ')}`;
+    } else {
+      countQuery = `SELECT COUNT(*) FROM services WHERE ${conditions.join(' AND ')}`;
+    }
+    
+    const countResult = await pool.query(countQuery, values.slice(0, -2)); // Sin limit/offset
+    const total = parseInt(countResult.rows[0].count);
+    
+    res.json({
+      services: r.rows,
+      total,
+      limit: parseInt(limit as string),
+      offset: parseInt(offset as string)
+    });
   } catch (err) {
     console.error('Get services error:', err);
     res.status(500).json({ error: 'Failed to get services' });

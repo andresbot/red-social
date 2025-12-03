@@ -66,7 +66,7 @@ ORDER BY tablename, indexname;
 
 ```env
 NODE_ENV=production
-PORT=3001
+PORT=3000
 JWT_SECRET=<secret-generado-64-chars>
 JWT_EXPIRES_IN=86400
 PGHOST=<db-host>

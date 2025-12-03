@@ -79,7 +79,7 @@ npm run build && npm start  # Producción
 ### 5. Abrir en Navegador
 
 ```
-http://localhost:3001
+http://localhost:3000
 ```
 
 ---
@@ -199,8 +199,8 @@ location.reload();
 pg_isready
 
 # Verificar puerto disponible
-lsof -i :3001  # Linux/Mac
-netstat -ano | findstr :3001  # Windows
+lsof -i :3000  # Linux/Mac
+netstat -ano | findstr :3000  # Windows
 ```
 
 ### Errores de CORS

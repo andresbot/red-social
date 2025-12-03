@@ -1,12 +1,25 @@
-// Buscar Servicios: obtiene servicios activos y permite filtrar
+// Buscar Servicios: obtiene servicios activos y permite filtrar con paginación
 
 const searchInput = document.getElementById('searchInput');
 const categoryFilter = document.getElementById('categoryFilter');
+const priceMinFilter = document.getElementById('priceMinFilter');
+const priceMaxFilter = document.getElementById('priceMaxFilter');
+const ratingFilter = document.getElementById('ratingFilter');
+const cityFilter = document.getElementById('cityFilter');
+const sortByFilter = document.getElementById('sortByFilter');
+const sortOrderFilter = document.getElementById('sortOrderFilter');
 const searchBtn = document.getElementById('searchBtn');
+const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 const resultsGrid = document.getElementById('resultsGrid');
 const resultsMessage = document.getElementById('resultsMessage');
+const resultsInfo = document.getElementById('resultsInfo');
+const paginationControls = document.getElementById('paginationControls');
 
-let allServices = [];
+// Estado de búsqueda y paginación
+let currentPage = 1;
+const itemsPerPage = 20;
+let totalResults = 0;
+let searchTimeout = null;
 
 function showMessage(text) {
   if (!resultsMessage) return;
@@ -41,6 +54,18 @@ async function renderServiceCard(svc) {
   const halves = Number(svc.price_qz_halves ?? 0);
   const priceQZ = (halves / 2).toFixed(1);
 
+  // Obtener rating promedio del servicio
+  let ratingAvg = null;
+  let ratingCount = null;
+  try {
+    const rres = await fetch(`/ratings/service/${svc.id}?limit=0`);
+    if (rres.ok) {
+      const rdata = await rres.json();
+      ratingAvg = rdata.avg ? Number(rdata.avg.toFixed(1)) : null;
+      ratingCount = rdata.total ?? null;
+    }
+  } catch {}
+
   // Obtener información del proveedor
   let providerName = 'Proveedor';
   let providerAvatar = null;
@@ -67,6 +92,10 @@ async function renderServiceCard(svc) {
         <span class="helper" style="text-transform: capitalize;">${svc.category || '-'}</span>
         <span style="font-size: 18px; font-weight: 700; color: var(--primary);">${priceQZ} QZ</span>
       </div>
+      ${ratingAvg !== null ? `<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+        <i class="fas fa-star" style="color:#f59e0b;"></i>
+        <span style="font-size: 14px; color: var(--text-secondary);">${ratingAvg} (${ratingCount} reseñas)</span>
+      </div>` : ''}
       <p class="helper" style="margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
         ${svc.description || ''}
       </p>
@@ -108,42 +137,135 @@ async function renderServiceCard(svc) {
   return card;
 }
 
-async function filterAndRender() {
-  const query = searchInput.value.trim().toLowerCase();
+// Construir query params desde los filtros
+function buildQueryParams(page = 1) {
+  const params = new URLSearchParams();
+  
+  const search = searchInput.value.trim();
+  if (search) params.append('search', search);
+  
   const category = categoryFilter.value;
+  if (category) params.append('category', category);
+  
+  const priceMin = priceMinFilter.value.trim();
+  if (priceMin) params.append('priceMin', priceMin);
+  
+  const priceMax = priceMaxFilter.value.trim();
+  if (priceMax) params.append('priceMax', priceMax);
+  
+  const minRating = ratingFilter.value;
+  if (minRating) params.append('minRating', minRating);
+  
+  const city = cityFilter.value.trim();
+  if (city) params.append('city', city);
+  
+  const sortBy = sortByFilter.value;
+  if (sortBy) params.append('sortBy', sortBy);
+  
+  const sortOrder = sortOrderFilter.value;
+  if (sortOrder) params.append('sortOrder', sortOrder);
+  
+  params.append('limit', itemsPerPage.toString());
+  params.append('offset', ((page - 1) * itemsPerPage).toString());
+  
+  return params.toString();
+}
 
-  let filtered = allServices.filter(svc => svc.status === 'active');
-
-  if (category) {
-    filtered = filtered.filter(svc => svc.category === category);
-  }
-
-  if (query) {
-    filtered = filtered.filter(svc => {
-      const titleMatch = (svc.title || '').toLowerCase().includes(query);
-      const descMatch = (svc.description || '').toLowerCase().includes(query);
-      return titleMatch || descMatch;
-    });
-  }
-
-  resultsGrid.innerHTML = '';
-  hideMessage();
-
-  if (filtered.length === 0) {
-    showMessage('No se encontraron servicios con esos criterios.');
+// Renderizar info de resultados
+function renderResultsInfo() {
+  if (!resultsInfo) return;
+  
+  if (totalResults === 0) {
+    resultsInfo.textContent = 'No se encontraron resultados';
     return;
   }
+  
+  const start = (currentPage - 1) * itemsPerPage + 1;
+  const end = Math.min(currentPage * itemsPerPage, totalResults);
+  resultsInfo.textContent = `Mostrando ${start}-${end} de ${totalResults} servicios`;
+}
 
-  // Renderizar tarjetas de forma asíncrona
-  for (const svc of filtered) {
-    const card = await renderServiceCard(svc);
-    resultsGrid.appendChild(card);
-  }
+// Renderizar controles de paginación
+function renderPagination() {
+  if (!paginationControls) return;
+  
+  paginationControls.innerHTML = '';
+  
+  const totalPages = Math.ceil(totalResults / itemsPerPage);
+  if (totalPages <= 1) return;
+  
+  // Botón anterior
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'btn-secondary';
+  prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+  prevBtn.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      fetchServices();
+    }
+  });
+  paginationControls.appendChild(prevBtn);
+  
+  // Info de página
+  const pageInfo = document.createElement('span');
+  pageInfo.style.fontSize = '14px';
+  pageInfo.style.color = 'var(--text-secondary)';
+  pageInfo.style.padding = '0 12px';
+  pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+  paginationControls.appendChild(pageInfo);
+  
+  // Botón siguiente
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'btn-secondary';
+  nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+  nextBtn.addEventListener('click', () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      fetchServices();
+    }
+  });
+  paginationControls.appendChild(nextBtn);
+}
+
+// Limpiar filtros
+function clearFilters() {
+  searchInput.value = '';
+  categoryFilter.value = '';
+  priceMinFilter.value = '';
+  priceMaxFilter.value = '';
+  ratingFilter.value = '';
+  cityFilter.value = '';
+  sortByFilter.value = 'created_at';
+  sortOrderFilter.value = 'DESC';
+  currentPage = 1;
+  fetchServices();
+}
+
+// Buscar con los filtros actuales
+function searchWithFilters() {
+  currentPage = 1; // Reset a página 1 al aplicar nuevos filtros
+  fetchServices();
+}
+
+// Buscar con debounce (para inputs de texto)
+function searchWithDebounce() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    searchWithFilters();
+  }, 500);
 }
 
 async function fetchServices() {
   try {
-    const res = await fetch('/services', { headers: { 'Accept': 'application/json' } });
+    const queryString = buildQueryParams(currentPage);
+    const res = await fetch(`/services?${queryString}`, { 
+      headers: { 'Accept': 'application/json' } 
+    });
+    
     if (!res.ok) throw new Error('Error al obtener servicios');
     const data = await res.json();
     
@@ -152,20 +274,62 @@ async function fetchServices() {
       throw new Error('Respuesta inválida del servidor');
     }
     
-    allServices = Array.isArray(data) ? data : [];
-    filterAndRender();
+    // Manejar respuesta nueva con paginación
+    const services = data.services || data;
+    totalResults = data.total || (Array.isArray(services) ? services.length : 0);
+    
+    resultsGrid.innerHTML = '';
+    hideMessage();
+    
+    if (!Array.isArray(services) || services.length === 0) {
+      showMessage('No se encontraron servicios con esos criterios.');
+      renderResultsInfo();
+      renderPagination();
+      return;
+    }
+    
+    // Renderizar tarjetas de forma asíncrona
+    for (const svc of services) {
+      const card = await renderServiceCard(svc);
+      resultsGrid.appendChild(card);
+    }
+    
+    renderResultsInfo();
+    renderPagination();
+    
+    // Scroll suave al inicio de resultados al cambiar de página
+    if (currentPage > 1) {
+      resultsGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   } catch (err) {
+    console.error('Error fetching services:', err);
     showMessage('No se pudieron cargar los servicios.');
+    totalResults = 0;
+    renderResultsInfo();
+    renderPagination();
   }
 }
 
 // Inicializar
 fetchServices();
 
-if (searchBtn) searchBtn.addEventListener('click', filterAndRender);
+// Event listeners
+if (searchBtn) searchBtn.addEventListener('click', searchWithFilters);
+if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearFilters);
+
+// Búsqueda con debounce para inputs de texto
 if (searchInput) {
+  searchInput.addEventListener('input', searchWithDebounce);
   searchInput.addEventListener('keyup', (e) => {
-    if (e.key === 'Enter') filterAndRender();
+    if (e.key === 'Enter') searchWithFilters();
   });
 }
-if (categoryFilter) categoryFilter.addEventListener('change', filterAndRender);
+if (cityFilter) cityFilter.addEventListener('input', searchWithDebounce);
+if (priceMinFilter) priceMinFilter.addEventListener('input', searchWithDebounce);
+if (priceMaxFilter) priceMaxFilter.addEventListener('input', searchWithDebounce);
+
+// Búsqueda inmediata para selects
+if (categoryFilter) categoryFilter.addEventListener('change', searchWithFilters);
+if (ratingFilter) ratingFilter.addEventListener('change', searchWithFilters);
+if (sortByFilter) sortByFilter.addEventListener('change', searchWithFilters);
+if (sortOrderFilter) sortOrderFilter.addEventListener('change', searchWithFilters);
