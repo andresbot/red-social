@@ -10,6 +10,7 @@ import { usersRouter } from './modules/users/routes';
 import { servicesRouter } from './modules/services/routes';
 import { messagingRouter, initMessagingSocket } from './modules/messaging/ws';
 import { contractsRouter } from './modules/contracts/routes';
+import adminRouter from './modules/admin/routes';
 import { serviceRequestsRouter } from './modules/service-requests/routes';
 import { paymentsRouter } from './modules/payments/routes';
 import { walletRouter } from './modules/wallet/routes';
@@ -103,6 +104,7 @@ app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/services', servicesRouter);
 app.use('/contracts', contractsRouter);
+  app.use('/admin', adminRouter);
 app.use('/service-requests', serviceRequestsRouter);
 app.use('/payments', paymentsRouter);
 app.use('/wallet', walletRouter);
@@ -113,7 +115,20 @@ app.use('/messaging', messagingRouter);
 // Sockets
 initMessagingSocket(io);
 
-const port = Number(process.env.PORT || 3000);
-server.listen(port, () => {
-  console.log(`Server listening on http://localhost:${port}`);
+// Robust process-level error logging to diagnose exit code 1
+process.on('unhandledRejection', (reason: any) => {
+  console.error('[unhandledRejection]', reason?.stack || reason);
 });
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err.stack || err);
+});
+
+const port = Number(process.env.PORT || 3000);
+try {
+  server.listen(port, () => {
+    console.log(`Server listening on http://localhost:${port}`);
+  });
+} catch (err: any) {
+  console.error('[server.listen error]', err?.stack || err);
+  process.exit(1);
+}

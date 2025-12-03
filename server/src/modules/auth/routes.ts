@@ -47,11 +47,32 @@ authRouter.post('/register', async (req, res) => {
 });
 
 authRouter.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  const r = await pool.query('SELECT id, password FROM users WHERE email=$1', [email]);
-  if (r.rowCount === 0) return res.status(401).json({ error: 'Invalid credentials' });
-  const ok = await verifyPassword(r.rows[0].password, password);
-  if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
-  const token = signAccessToken({ userId: r.rows[0].id, role: 'user' });
-  res.json({ token });
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+
+    // 1) Intentar como admin primero (tabla admin_users con crypt)
+    const ar = await pool.query(
+      'SELECT au.id, au.password, ar.role_name FROM admin_users au JOIN admin_roles ar ON au.role_id=ar.id WHERE au.email=$1 AND au.is_active=true',
+      [email]
+    );
+    if (ar.rowCount > 0) {
+      const admin = ar.rows[0];
+      const cmp = await pool.query('SELECT crypt($1, $2) = $2 AS ok', [password, admin.password]);
+      if (!cmp.rows[0]?.ok) return res.status(401).json({ error: 'Invalid credentials' });
+      const token = signAccessToken({ sub: admin.id, role: admin.role_name, scope: 'admin' });
+      return res.json({ token, scope: 'admin', role: admin.role_name });
+    }
+
+    // 2) Usuario normal (tabla users con argon2)
+    const r = await pool.query('SELECT id, password, user_type FROM users WHERE email=$1 AND is_active=true', [email]);
+    if (r.rowCount === 0) return res.status(401).json({ error: 'Invalid credentials' });
+    const ok = await verifyPassword(r.rows[0].password, password);
+    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+    const token = signAccessToken({ userId: r.rows[0].id, role: r.rows[0].user_type, scope: 'user' });
+    return res.json({ token, scope: 'user', role: r.rows[0].user_type });
+  } catch (e: any) {
+    console.error('Unified login error:', e);
+    return res.status(500).json({ error: 'Server error', details: e.message });
+  }
 });

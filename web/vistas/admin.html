@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel de Administración - Red Social</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body style="background: var(--bg-secondary);">
+  <header class="topbar">
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;">
+      <h1><i class="fas fa-shield-halved"></i> Panel de Administración</h1>
+      <nav>
+        <a href="/"><i class="fas fa-home"></i> Volver al Inicio</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-container">
+    <!-- Header Section -->
+    <div class="admin-header-section">
+      <h2 class="admin-title"><i class="fas fa-crown"></i> Centro de Control</h2>
+      <p class="admin-subtitle">Gestiona usuarios, servicios, reportes y métricas de la plataforma</p>
+    </div>
+
+    <!-- Login Section -->
+    <section class="admin-login-card">
+      <div class="card-title">
+        <i class="fas fa-lock"></i>
+        Autenticación de Administrador
+      </div>
+      <div class="admin-login-form">
+        <input id="adminEmail" class="input" type="email" placeholder="Email de administrador" />
+        <input id="adminPassword" class="input" type="password" placeholder="Contraseña (mín. 8 caracteres)" />
+        <button id="adminLoginBtn" class="btn-primary">
+          <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+        </button>
+      </div>
+      <p id="adminLoginMsg" class="admin-message"></p>
+    </section>
+
+    <!-- Tabs Container -->
+    <section class="admin-tabs-container">
+      <div class="admin-tabs-header">
+        <button class="tab-btn active" data-tab="users">
+          <i class="fas fa-users-cog"></i>
+          <span>Usuarios Admin</span>
+        </button>
+        <button class="tab-btn" data-tab="services">
+          <i class="fas fa-briefcase"></i>
+          <span>Servicios</span>
+        </button>
+        <button class="tab-btn" data-tab="reports">
+          <i class="fas fa-flag"></i>
+          <span>Reportes</span>
+        </button>
+        <button class="tab-btn" data-tab="disputes">
+          <i class="fas fa-balance-scale"></i>
+          <span>Disputas</span>
+        </button>
+        <button class="tab-btn" data-tab="metrics">
+          <i class="fas fa-chart-line"></i>
+          <span>Métricas</span>
+        </button>
+      </div>
+
+      <!-- Tab Content: Usuarios Admin -->
+      <div id="tab-users" class="tab-content">
+        <div class="admin-form-section">
+          <div class="admin-form-title">
+            <i class="fas fa-user-plus"></i>
+            Crear Nuevo Administrador
+          </div>
+          <div class="admin-form-grid">
+            <input id="newAdminEmail" class="input" type="email" placeholder="Email" />
+            <input id="newAdminPassword" class="input" type="password" placeholder="Contraseña (mín. 8)" />
+            <input id="newAdminName" class="input" type="text" placeholder="Nombre Completo" />
+            <select id="newAdminRole" class="input">
+              <option value="moderator">Moderador</option>
+              <option value="superadmin">Superadmin</option>
+            </select>
+            <button id="createAdminBtn" class="btn-primary">
+              <i class="fas fa-plus"></i> Crear Admin
+            </button>
+          </div>
+          <p id="createAdminMsg" class="admin-message"></p>
+        </div>
+
+        <div class="admin-table-container">
+          <div class="admin-table-header">
+            <div class="admin-table-title">
+              <i class="fas fa-users"></i>
+              Lista de Administradores
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <div id="adminUsersList">
+              <!-- Tabla generada dinámicamente -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Servicios -->
+      <div id="tab-services" class="tab-content" style="display:none;">
+        <div class="admin-filters">
+          <label for="svcFilter">Filtrar por estado:</label>
+          <select id="svcFilter" class="input">
+            <option value="">Todos</option>
+            <option value="active">Activos</option>
+            <option value="paused">Pausados</option>
+            <option value="inactive">Inactivos</option>
+          </select>
+          <button id="svcReload" class="btn-icon" title="Recargar">
+            <i class="fas fa-rotate"></i>
+          </button>
+        </div>
+        <div class="table-wrapper">
+          <div id="adminServicesList">
+            <div class="admin-empty-state">
+              <i class="fas fa-briefcase"></i>
+              <p>Cargando servicios...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Reportes -->
+      <div id="tab-reports" class="tab-content" style="display:none;">
+        <div class="admin-filters">
+          <label for="repFilter">Filtrar por estado:</label>
+          <select id="repFilter" class="input">
+            <option value="pending">Pendientes</option>
+            <option value="reviewed">Revisados</option>
+            <option value="dismissed">Desestimados</option>
+            <option value="action_taken">Acción Tomada</option>
+          </select>
+          <button id="repReload" class="btn-icon" title="Recargar">
+            <i class="fas fa-rotate"></i>
+          </button>
+        </div>
+        <div class="table-wrapper">
+          <div id="adminReportsList">
+            <div class="admin-empty-state">
+              <i class="fas fa-flag"></i>
+              <p>Cargando reportes...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Disputas -->
+      <div id="tab-disputes" class="tab-content" style="display:none;">
+        <div class="admin-empty-state">
+          <i class="fas fa-balance-scale"></i>
+          <p>Gestión de disputas en desarrollo</p>
+          <small class="helper">Esta funcionalidad estará disponible próximamente</small>
+        </div>
+        <div id="adminDisputesList"></div>
+      </div>
+
+      <!-- Tab Content: Métricas -->
+      <div id="tab-metrics" class="tab-content" style="display:none;">
+        <div id="adminMetrics" class="admin-metrics-grid">
+          <!-- Métricas generadas dinámicamente -->
+          <div class="admin-empty-state">
+            <i class="fas fa-chart-line"></i>
+            <p>Cargando métricas de plataforma...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

@@ -14,6 +14,14 @@ export const Auth = {
             if (response.token) {
                 AppState.token = response.token;
                 localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, response.token);
+                // Si es admin, redirigir al panel de admin sin cargar /users/me
+                if (response.scope === 'admin') {
+                    localStorage.setItem('auth_scope', 'admin');
+                    localStorage.setItem('admin_role', response.role || 'admin');
+                    Utils.showToast('Sesión de administrador iniciada', 'success');
+                    window.location.href = '/vistas/admin.html';
+                    return true;
+                }
                 await this.loadUserData();
                 Utils.showToast('Sesión iniciada correctamente', 'success');
                 return true;
