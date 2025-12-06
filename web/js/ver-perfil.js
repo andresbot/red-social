@@ -428,9 +428,36 @@ async function loadUserServices() {
 
 // Event listeners
 if (contactBtn) {
-  contactBtn.addEventListener('click', () => {
-    // TODO: Implementar sistema de mensajería
-    alert('Sistema de mensajería próximamente');
+  contactBtn.addEventListener('click', async () => {
+    if (!myUserId || !userId || myUserId === userId) {
+      alert('No puedes contactar a este usuario.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/messaging/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          otherUserId: userId
+        })
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'No se pudo iniciar la conversación');
+      }
+
+      const { conversationId } = await res.json();
+      window.location.href = `/vistas/mensajes.html?conversationId=${conversationId}`;
+    } catch (err) {
+      console.error('Error al contactar:', err);
+      alert('No se pudo iniciar la conversación. Intenta más tarde.');
+    }
   });
 }
 

@@ -8,7 +8,8 @@ import { pool } from './lib/db';
 import { authRouter } from './modules/auth/routes';
 import { usersRouter } from './modules/users/routes';
 import { servicesRouter } from './modules/services/routes';
-import { messagingRouter, initMessagingSocket } from './modules/messaging/ws';
+import { messagingRouter } from './modules/messaging/routes';
+import { initMessagingSocket } from './modules/messaging/ws';
 import { contractsRouter } from './modules/contracts/routes';
 import adminRouter from './modules/admin/routes';
 import { serviceRequestsRouter } from './modules/service-requests/routes';
@@ -113,7 +114,7 @@ app.use('/ratings', ratingsRouter);
 app.use('/messaging', messagingRouter);
 
 // Sockets
-initMessagingSocket(io);
+initMessagingSocket(io, pool);
 
 // Robust process-level error logging to diagnose exit code 1
 process.on('unhandledRejection', (reason: any) => {
