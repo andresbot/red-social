@@ -1,9 +1,9 @@
-// Configuración de la aplicación
+// web/js/config.js
+// Detecta si estás en localhost o en producción
+const isLocal = window.location.hostname === 'localhost';
+
 export const CONFIG = {
-    API_BASE_URL: 'http://localhost:3000',
-    STORAGE_KEYS: {
-        TOKEN: 'token',
-        USER_ROLE: 'userRole',
-        USER_DATA: 'userData'
-    }
+  API_BASE_URL: isLocal
+    ? 'http://localhost:3000'
+    : 'https://quetzal-backend.onrender.com'
 };
