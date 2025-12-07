@@ -13,10 +13,11 @@ Plataforma de servicios profesionales con sistema de contratos, pagos en moneda 
 - **Búsqueda y Filtros** - Buscar servicios por texto y categoría
 - **Roles de Usuario** - Consumer, Provider, Both, Admin
 - **Auto-refresh** - Actualización automática de contratos cada 30 segundos
+- **Sistema de Mensajería en Tiempo Real** - Chat 1:1 entre usuarios con WebSockets, preview de mensajes, indicadores de lectura y notificaciones
+
 
 ### 🚧 En Desarrollo
 
-- Sistema de mensajería (WebSockets configurados)
 - Wallet y pagos con ePayco
 - Sistema de notificaciones
 - Ratings y reviews
@@ -32,7 +33,7 @@ Plataforma de servicios profesionales con sistema de contratos, pagos en moneda 
 - **JWT** - Autenticación
 - **Argon2** - Hash de contraseñas
 - **Multer** - Uploads de archivos
-- **Socket.io** - WebSockets (preparado)
+- **Socket.io** - WebSockets en tiempo real
 
 ### Frontend
 - **HTML5 + CSS3** - UI moderna con variables CSS
@@ -260,5 +261,5 @@ Desarrollado por [Tu Nombre]
 
 ---
 
-**Versión:** 1.0.0  
+**Versión:** 1.1.0 
 **Última actualización:** Diciembre 2025
