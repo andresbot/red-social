@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import type { Request, Response } from 'express';
+import type { FileFilterCallback } from 'multer';
 import { pool } from '../../lib/db';
 import { authenticate, AuthRequest } from '../../middleware/auth';
 import { hash, verify } from 'argon2';
@@ -6,33 +8,52 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
+
 const uploadsDir = path.join(process.cwd(), '..', 'web', 'uploads', 'avatars');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (
+    req: Request,
+    file: Express.Multer.File,
+    cb: (error: Error | null, dest: string) => void
+  ) => {
     cb(null, uploadsDir);
   },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
+  filename: (
+    req: Request,
+    file: Express.Multer.File,
+    cb: (error: Error | null, filename: string) => void
+  ) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      'avatar-' + uniqueSuffix + path.extname(file.originalname)
+    );
   }
 });
 
 const avatarUpload = multer({
   storage,
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    if (mimetype && extname) {
-      return cb(null, true);
-    }
-    cb(new Error('Solo se permiten imágenes (jpeg, jpg, png, gif, webp)'));
-  }
+
+  fileFilter: (
+  req: Request,
+  file: Express.Multer.File,
+  cb: (error: Error | null, acceptFile: boolean) => void
+) => {
+  const allowedTypes = /jpeg|jpg|png|gif|webp/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  );
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) return cb(null, true);
+
+  return cb(new Error('Solo se permiten imágenes (jpeg, jpg, png, gif, webp)'), false);
+}
 });
 
 export const usersRouter = Router();
@@ -215,7 +236,7 @@ usersRouter.post('/me/skills', authenticate, async (req: AuthRequest, res) => {
       [req.userId, skill_name.trim()]
     );
 
-    if (existing.rowCount > 0) {
+    if (existing.rowCount && existing.rowCount > 0) {
       return res.status(400).json({ error: 'Esta habilidad ya existe' });
     }
 

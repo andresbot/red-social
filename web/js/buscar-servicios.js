@@ -333,3 +333,37 @@ if (categoryFilter) categoryFilter.addEventListener('change', searchWithFilters)
 if (ratingFilter) ratingFilter.addEventListener('change', searchWithFilters);
 if (sortByFilter) sortByFilter.addEventListener('change', searchWithFilters);
 if (sortOrderFilter) sortOrderFilter.addEventListener('change', searchWithFilters);
+
+// WebSocket y notificaciones
+let socket = null;
+let currentUserId = null;
+
+async function initNotifications() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  try {
+    const res = await fetch('/users/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+    const user = await res.json();
+    currentUserId = user.id;
+
+    socket = io('/', { auth: { token } });
+
+    if (typeof window.initNotifications === 'function') {
+      window.initNotifications(currentUserId, socket);
+    }
+
+    socket.on('new_notification', (notif) => {
+      if (typeof window.handleNewNotification === 'function') {
+        window.handleNewNotification(notif);
+      }
+    });
+  } catch (err) {
+    console.error('No se pudo inicializar notificaciones:', err);
+  }
+}
+
+initNotifications();

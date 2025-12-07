@@ -39,11 +39,11 @@ export const createMessage = async (
   const conv = convRes.rows[0];
   const recipientId = conv.user1_id === senderId ? conv.user2_id : conv.user1_id;
 
-  const preview = content.length > 50 ? content.substring(0, 50) + '...' : content;
+  const preview = content.length > 50 ? content.substring(0, 50) + '...' : content; 
   await dbPool.query(
-    `INSERT INTO notifications (user_id, type, title, message, reference_id, action_url)
-     VALUES ($1, 'new_message', 'Nuevo mensaje', $2, $3, $4)`,
-    [recipientId, preview, conversationId, `/chat/${conversationId}`]
+  `INSERT INTO notifications (user_id, type, title, message, reference_id, action_url)
+   VALUES ($1, 'new_message', 'Nuevo mensaje', $2, $3, $4)`,
+  [recipientId, preview, conversationId, `/vistas/mensajes.html?conversationId=${conversationId}`]
   );
 
   return {

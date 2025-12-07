@@ -260,6 +260,18 @@ async function initApp() {
   if (conversationIdFromUrl) {
     // Puedes cargar la conversación aquí si lo deseas
   }
+
+  // En mensajes.js, dentro de initApp(), después de initSocket()
+  if (typeof window.initNotifications === 'function' && socket) {
+      window.initNotifications(currentUserId, socket);
+  }
+
+// Escuchar notificaciones en tiempo real
+  socket.on('new_notification', (notif) => {
+    if (typeof window.handleNewNotification === 'function') {
+      window.handleNewNotification(notif);
+    }
+  });
 }
 
 initApp();

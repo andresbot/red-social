@@ -17,6 +17,7 @@ import { paymentsRouter } from './modules/payments/routes';
 import { walletRouter } from './modules/wallet/routes';
 import webhooksRouter from './modules/webhooks/routes';
 import { ratingsRouter } from './modules/ratings/routes';
+import { notificationsRouter } from './modules/notifications/routes';
 
 const app = express();
 const server = http.createServer(app);
@@ -105,13 +106,14 @@ app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/services', servicesRouter);
 app.use('/contracts', contractsRouter);
-  app.use('/admin', adminRouter);
+app.use('/admin', adminRouter);
 app.use('/service-requests', serviceRequestsRouter);
 app.use('/payments', paymentsRouter);
 app.use('/wallet', walletRouter);
 app.use('/webhooks', webhooksRouter);
 app.use('/ratings', ratingsRouter);
 app.use('/messaging', messagingRouter);
+app.use('/notifications', notificationsRouter);
 
 // Sockets
 initMessagingSocket(io, pool);

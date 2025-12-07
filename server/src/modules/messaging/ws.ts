@@ -9,7 +9,7 @@ import { QueryResult } from 'pg';
 
 export const messagingRouter = Router();
 
-const onlineUsers = new Map<string, Set<Socket>>();
+export const onlineUsers = new Map<string, Set<Socket>>();
 
 // Recibe el pool como segundo argumento
 export const initMessagingSocket = (io: SocketIOServer, dbPool: Pool) => {

@@ -56,13 +56,14 @@ authRouter.post('/login', async (req, res) => {
       'SELECT au.id, au.password, ar.role_name FROM admin_users au JOIN admin_roles ar ON au.role_id=ar.id WHERE au.email=$1 AND au.is_active=true',
       [email]
     );
-    if (ar.rowCount > 0) {
+    // Si existe un admin con ese email, validar el password (crypt)
+    if (ar.rowCount && ar.rowCount > 0) {
       const admin = ar.rows[0];
-      const cmp = await pool.query('SELECT crypt($1, $2) = $2 AS ok', [password, admin.password]);
-      if (!cmp.rows[0]?.ok) return res.status(401).json({ error: 'Invalid credentials' });
-      const token = signAccessToken({ sub: admin.id, role: admin.role_name, scope: 'admin' });
-      return res.json({ token, scope: 'admin', role: admin.role_name });
-    }
+      const cmp = await pool.query('SELECT crypt($1, $2) = $2 AS ok',[password, admin.password]);
+    if (!cmp.rows[0]?.ok) return res.status(401).json({ error: 'Invalid credentials' });
+    const token = signAccessToken({sub: admin.id,role: admin.role_name,scope: 'admin'});
+    return res.json({ token, scope: 'admin', role: admin.role_name });
+}
 
     // 2) Usuario normal (tabla users con argon2)
     const r = await pool.query('SELECT id, password, user_type FROM users WHERE email=$1 AND is_active=true', [email]);

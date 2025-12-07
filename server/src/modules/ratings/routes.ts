@@ -41,7 +41,7 @@ ratingsRouter.post('/', authenticate, async (req: AuthRequest, res) => {
        LIMIT 1`,
       [contract.service_id, raterId]
     );
-    if (dup.rowCount > 0) {
+    if ((dup.rowCount ?? 0) > 0) {
       return res.status(409).json({ error: 'Ya existe una calificación para este contrato de este comprador' });
     }
 

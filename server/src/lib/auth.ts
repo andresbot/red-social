@@ -1,22 +1,43 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions, JwtPayload } from 'jsonwebtoken';
 import argon2 from 'argon2';
 
-export async function hashPassword(password: string) {
+/**
+ * Hashear contraseña con Argon2
+ */
+export async function hashPassword(password: string): Promise<string> {
   return argon2.hash(password);
 }
 
-export async function verifyPassword(hash: string, password: string) {
+/**
+ * Verificar una contraseña contra un hash
+ */
+export async function verifyPassword(hash: string, password: string): Promise<boolean> {
   return argon2.verify(hash, password);
 }
 
-export function signAccessToken(payload: object, expiresIn?: string | number) {
-  const secret = process.env.JWT_SECRET || 'dev-secret';
-  // Convertir a número si viene del .env (segundos)
-  const expires = expiresIn || parseInt(process.env.JWT_EXPIRES_IN || '86400', 10);
-  return jwt.sign(payload, secret, { expiresIn: expires });
+/**
+ * Generar token JWT de acceso
+ */
+export function signAccessToken(
+  payload: Record<string, any>,
+  expiresIn?: string | number
+): string {
+  const secret: string = process.env.JWT_SECRET ?? 'dev-secret';
+
+  // Convertimos a un tipo que TS acepte seguro
+  const exp = (expiresIn ??
+    process.env.JWT_EXPIRES_IN ??
+    "1d") as SignOptions["expiresIn"];
+
+  const opts: SignOptions = { expiresIn: exp };
+
+  return jwt.sign(payload, secret, opts);
 }
 
-export function verifyToken(token: string) {
-  const secret = process.env.JWT_SECRET || 'dev-secret';
+/**
+ * Verificar un token JWT
+ */
+export function verifyToken(token: string): string | JwtPayload {
+  const secret: string = process.env.JWT_SECRET ?? 'dev-secret';
   return jwt.verify(token, secret);
 }
