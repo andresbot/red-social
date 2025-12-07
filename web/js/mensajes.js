@@ -1,5 +1,6 @@
 // Mensajes: chat en tiempo real con Socket.IO
 import { API } from './api.js';
+import { AppState } from './state.js';
 
 const conversationsList = document.getElementById('conversationsList');
 const conversationsMessage = document.getElementById('conversationsMessage');
@@ -16,12 +17,11 @@ let socket = null;
 
 // Inicializar Socket.IO
 function initSocket() {
-  const token = localStorage.getItem('token');
-  if (!token) return;
+ if (!AppState.token) return;
 
   // Conectar al WebSocket
   socket = io('/', {
-    auth: { token },
+    auth: { token: AppState.token },
     transports: ['websocket'] // fuerza WebSocket puro
   });
 
@@ -227,11 +227,12 @@ if (logoutBtn) {
 let currentUserId = null;
 
 async function initApp() {
-  const token = localStorage.getItem('token');
-  if (!token) {
+  if (!AppState.token) {
     window.location.href = '/vistas/login.html';
     return;
   }
+  const token = AppState.token;
+  
 
   // Obtener el ID del usuario logueado
   try {
