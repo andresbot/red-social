@@ -4,7 +4,15 @@ import path from 'path';
 import fs from 'fs';
 import { pool } from '../../lib/db';
 import { authenticate, optionalAuth, AuthRequest } from '../../middleware/auth';
-
+const isProduction = process.env.NODE_ENV === 'production';
+let supabaseStorage: any = null;
+if (isProduction) {
+  const { createClient } = require('@supabase/storage-js');
+  supabaseStorage = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 export const servicesRouter = Router();
 
 // Configuración de subida de imágenes
@@ -184,29 +192,55 @@ servicesRouter.get('/:id', async (req, res) => {
 servicesRouter.post('/', authenticate, upload.single('image'), async (req: AuthRequest & { file?: any }, res) => {
   try {
     const { title, category, description, price_qz_halves, delivery_time, requirements } = req.body;
-    const image_url = req.file ? `/uploads/${req.file.filename}` : null;
     
     // Validaciones
     if (!title || !category || !description || !price_qz_halves || !delivery_time) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    
     if (title.length < 10 || title.length > 255) {
       return res.status(400).json({ error: 'Title must be between 10 and 255 characters' });
     }
-    
     if (description.length < 50 || description.length > 5000) {
       return res.status(400).json({ error: 'Description must be between 50 and 5000 characters' });
     }
-    
     if (price_qz_halves < 1) {
       return res.status(400).json({ error: 'Price must be at least 0.5 QZ (1 half)' });
     }
-    
-    // Usar userId del token JWT
-    const user_id = req.userId!;
-    
+
+    let image_url = null;
+
+    // Subir imagen según entorno
+    if (req.file) {
+      if (isProduction) {
+        // 🌐 Supabase Storage
+        const fileBuffer = req.file.buffer;
+        const fileName = `services/${Date.now()}_${req.file.originalname}`;
+        
+        const { data, error } = await supabaseStorage
+          .from('service-images')
+          .upload(fileName, fileBuffer, {
+            contentType: req.file.mimetype,
+            upsert: false
+          });
+
+        if (error) {
+          console.error('Supabase upload error:', error);
+          return res.status(500).json({ error: 'No se pudo subir la imagen' });
+        }
+
+        const { data: { publicUrl } } = supabaseStorage
+          .from('service-images')
+          .getPublicUrl(fileName);
+        
+        image_url = publicUrl;
+      } else {
+        // 💻 Disco local
+        image_url = `/uploads/${req.file.filename}`;
+      }
+    }
+
     // Insertar servicio
+    const user_id = req.userId!;
     const result = await pool.query(
       `INSERT INTO services (user_id, title, category, description, price_qz_halves, delivery_time, requirements, image_url, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active')

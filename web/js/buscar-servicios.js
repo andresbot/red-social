@@ -47,7 +47,7 @@ async function renderServiceCard(svc) {
   });
 
   const thumb = svc.image_url
-    ? `<img src="${CONFIG.API_BASE_URL}${svc.image_url}" alt="Imagen" style="width:100%;height:160px;object-fit:cover;border-radius:var(--radius-md) var(--radius-md) 0 0;" />`
+    ? `<img src="${svc.image_url}" alt="Imagen" style="width:100%;height:160px;object-fit:cover;border-radius:var(--radius-md) var(--radius-md) 0 0;" />`
     : `<div style="width:100%;height:160px;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md) var(--radius-md) 0 0;">
          <i class="fas fa-image fa-3x" style="color:var(--text-tertiary);"></i>
        </div>`;
