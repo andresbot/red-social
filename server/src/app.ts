@@ -29,67 +29,28 @@ const io = new SocketIOServer(server, {
 app.use(express.json());
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }));
 
-// Servir archivos estáticos del frontend
-const webPath = path.join(process.cwd(), '..', 'web');
-app.use(express.static(webPath));
-// Servir uploads
-app.use('/uploads', express.static(path.join(webPath, 'uploads')));
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Ruta raíz: visitante.html si no está autenticado, index.html si tiene sesión
-app.get('/', (req, res) => {
-  // Verificar si hay token en headers Authorization
-  const authHeader = req.headers.authorization;
-  const hasToken = authHeader && authHeader.startsWith('Bearer ');
-  
-  if (hasToken) {
-    // Usuario autenticado: mostrar dashboard
-    res.sendFile(path.join(webPath, 'vistas', 'index.html'));
-  } else {
-    // Usuario visitante: mostrar landing page
-    res.sendFile(path.join(webPath, 'vistas', 'visitante.html'));
-  }
-});
+if (!isProduction) {
+  const webPath = path.join(process.cwd(), '..', 'web');
+  app.use(express.static(webPath));
+  app.use('/uploads', express.static(path.join(webPath, 'uploads')));
 
-// Rutas para vistas de autenticación
-app.get('/register', (_req, res) => {
-  res.sendFile(path.join(webPath, 'vistas', 'register.html'));
-});
+  // Rutas de vistas HTML (solo en desarrollo)
+  const htmlRoutes = [
+    '/', '/register', '/login', '/publicar-servicio',
+    '/mis-servicios', '/buscar-servicios', '/detalle-servicio',
+    '/contratos', '/perfil', '/ver-perfil', '/cartera'
+  ];
 
-app.get('/login', (_req, res) => {
-  res.sendFile(path.join(webPath, 'vistas', 'login.html'));
-});
-
-app.get('/publicar-servicio', (_req, res) => {
-  res.sendFile(path.join(webPath, 'vistas', 'publicar-servicio.html'));
-});
-
-app.get('/mis-servicios', (_req, res) => {
-  res.sendFile(path.join(webPath, 'vistas', 'mis-servicios.html'));
-});
-
-app.get('/buscar-servicios', (_req, res) => {
-  res.sendFile(path.join(webPath, 'vistas', 'buscar-servicios.html'));
-});
-
-app.get('/detalle-servicio', (_req, res) => {
-  res.sendFile(path.join(webPath, 'vistas', 'detalle-servicio.html'));
-});
-
-app.get('/contratos', (_req, res) => {
-  res.sendFile(path.join(webPath, 'vistas', 'contratos.html'));
-});
-
-app.get('/perfil', (_req, res) => {
-  res.sendFile(path.join(webPath, 'vistas', 'perfil.html'));
-});
-
-app.get('/ver-perfil', (_req, res) => {
-  res.sendFile(path.join(webPath, 'vistas', 'ver-perfil.html'));
-});
-
-app.get('/cartera', (_req, res) => {
-  res.sendFile(path.join(webPath, 'vistas', 'cartera.html'));
-});
+  htmlRoutes.forEach(route => {
+    app.get(route, (req, res) => {
+      const view = route === '/' ? 'visitante.html' : route.slice(1) + '.html';
+      const fullPath = path.join(webPath, 'vistas', view);
+      res.sendFile(fullPath);
+    });
+  });
+}
 
 // Health
 app.get('/health', async (_req, res) => {
