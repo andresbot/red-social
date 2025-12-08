@@ -231,8 +231,8 @@ async function initApp() {
 
   // Obtener el ID del usuario logueado
   try {
-    const res = await fetch('/users/me', {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
+    headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.ok) {
       const user = await res.json();
