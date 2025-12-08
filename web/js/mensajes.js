@@ -1,6 +1,6 @@
 // Mensajes: chat en tiempo real con Socket.IO
 import { API } from './api.js';
-import { AppState } from './state.js';
+import { CONFIG } from './config.js';
 
 const conversationsList = document.getElementById('conversationsList');
 const conversationsMessage = document.getElementById('conversationsMessage');
@@ -16,12 +16,9 @@ let currentConversationId = null;
 let socket = null;
 
 // Inicializar Socket.IO
-function initSocket() {
- if (!AppState.token) return;
-
-  // Conectar al WebSocket
+function initSocket(token) {
   socket = io('/', {
-    auth: { token: AppState.token },
+    auth: { token },
     transports: ['websocket'] // fuerza WebSocket puro
   });
 
@@ -30,10 +27,10 @@ function initSocket() {
   });
 
   socket.on('new_message', (msg) => {
-  if (msg.conversation_id === currentConversationId) {
-    appendMessage(msg); 
-  }
-});
+    if (msg.conversation_id === currentConversationId) {
+      appendMessage(msg); 
+    }
+  });
 
   socket.on('message_sent', (data) => {
     // Opcional: confirmación visual
@@ -48,20 +45,18 @@ function initSocket() {
   });
 
   socket.on('conversation_updated', (update) => {
-  // Actualizar la conversación en la lista
-  const convItem = document.querySelector(`[data-conversation-id="${update.conversationId}"]`);
-  if (convItem) {
-    // Actualizar el preview y la hora
-    const previewEl = convItem.querySelector('.helper');
-    const timeEl = convItem.querySelector('div[style*="text-align:right"]');
-    if (previewEl) {
-      previewEl.textContent = update.lastMessagePreview;
+    const convItem = document.querySelector(`[data-conversation-id="${update.conversationId}"]`);
+    if (convItem) {
+      const previewEl = convItem.querySelector('.helper');
+      const timeEl = convItem.querySelector('div[style*="text-align:right"]');
+      if (previewEl) {
+        previewEl.textContent = update.lastMessagePreview;
+      }
+      if (timeEl) {
+        timeEl.textContent = new Date(update.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
     }
-    if (timeEl) {
-      timeEl.textContent = new Date(update.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-  }
-});
+  });
 }
 
 function showMessage(el, text, type = 'info') {
@@ -227,11 +222,11 @@ if (logoutBtn) {
 let currentUserId = null;
 
 async function initApp() {
-  if (!AppState.token) {
+  const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+  if (!token) {
     window.location.href = '/vistas/login.html';
     return;
   }
-  const token = AppState.token;
   
 
   // Obtener el ID del usuario logueado
@@ -252,7 +247,7 @@ async function initApp() {
     return;
   }
 
-  initSocket();
+  initSocket(token);
   fetchConversations();
 
   // Manejo de URL con conversationId (opcional pero útil)
