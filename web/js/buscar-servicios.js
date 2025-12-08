@@ -1,4 +1,5 @@
 // Buscar Servicios: obtiene servicios activos y permite filtrar con paginación
+import { CONFIG } from './config.js';
 
 const searchInput = document.getElementById('searchInput');
 const categoryFilter = document.getElementById('categoryFilter');
@@ -58,7 +59,7 @@ async function renderServiceCard(svc) {
   let ratingAvg = null;
   let ratingCount = null;
   try {
-    const rres = await fetch(`/ratings/service/${svc.id}?limit=0`);
+    const rres = await fetch(`${CONFIG.API_BASE_URL}/ratings/service/${svc.id}?limit=0`);
     if (rres.ok) {
       const rdata = await rres.json();
       ratingAvg = rdata.avg ? Number(rdata.avg.toFixed(1)) : null;
@@ -70,7 +71,7 @@ async function renderServiceCard(svc) {
   let providerName = 'Proveedor';
   let providerAvatar = null;
   try {
-    const res = await fetch(`/users/${svc.user_id}`);
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/${svc.user_id}`);
     if (res.ok) {
       const user = await res.json();
       providerName = user.full_name || 'Proveedor';
@@ -262,7 +263,7 @@ function searchWithDebounce() {
 async function fetchServices() {
   try {
     const queryString = buildQueryParams(currentPage);
-    const res = await fetch(`/services?${queryString}`, { 
+    const res = await fetch(`${CONFIG.API_BASE_URL}/services?${queryString}`,{ 
       headers: { 'Accept': 'application/json' } 
     });
     
@@ -339,18 +340,19 @@ let socket = null;
 let currentUserId = null;
 
 async function initNotifications() {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
   if (!token) return;
 
   try {
-    const res = await fetch('/users/me', {
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!res.ok) return;
     const user = await res.json();
     currentUserId = user.id;
 
-    socket = io('/', { auth: { token } });
+    // Conectar al WebSocket del backend
+    socket = io(`${CONFIG.API_BASE_URL}`, { auth: { token } });
 
     if (typeof window.initNotifications === 'function') {
       window.initNotifications(currentUserId, socket);
