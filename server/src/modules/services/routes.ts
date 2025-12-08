@@ -230,8 +230,8 @@ servicesRouter.post('/', authenticate, upload.single('image'), async (req: AuthR
         .storage
         .from('service-images')
         .getPublicUrl(fileName);
-        
-        image_url = publicUrl;
+        image_url = publicUrl.trim();
+      
       } else {
         // 💻 Disco local
         image_url = `/uploads/${req.file.filename}`;
