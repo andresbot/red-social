@@ -1,4 +1,5 @@
 // Perfil: vista y edición del perfil del usuario
+import { CONFIG } from './config.js';
 
 const profileView = document.getElementById('profileView');
 const profileEdit = document.getElementById('profileEdit');
@@ -36,13 +37,13 @@ function showMessage(elementId, text, type = 'info') {
 // Cargar datos del usuario
 async function loadProfile() {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
     if (!token) {
       window.location.href = '/vistas/login.html';
       return;
     }
 
-    const res = await fetch('/users/me', {
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -172,10 +173,10 @@ function renderProfile(user) {
 // Cargar estadísticas
 async function loadStats() {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
     
     // Obtener servicios
-    const servicesRes = await fetch('/services', {
+    const servicesRes = await fetch(`${CONFIG.API_BASE_URL}/services`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -192,7 +193,7 @@ async function loadStats() {
     }
 
     // Obtener contratos completados
-    const contractsRes = await fetch('/contracts', {
+    const contractsRes = await fetch(`${CONFIG.API_BASE_URL}/contracts`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -205,7 +206,7 @@ async function loadStats() {
     }
 
     // Rating (obtener de endpoint cuando esté implementado)
-    const ratingRes = await fetch('/users/me/rating', {
+    const ratingRes = await fetch(`${CONFIG.API_BASE_URL}/users/me/rating`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -231,8 +232,8 @@ async function loadStats() {
 // Cargar skills
 async function loadSkills() {
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/users/me/skills', {
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me/skills`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -285,8 +286,8 @@ async function addSkill() {
   if (!skillName) return;
 
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/users/me/skills', {
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me/skills`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -312,8 +313,8 @@ async function addSkill() {
 // Eliminar skill
 window.removeSkill = async function(skillId) {
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`/users/me/skills/${skillId}`, {
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me/skills/${skillId}`,{
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -413,8 +414,8 @@ editForm.addEventListener('submit', async (e) => {
   }
 
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/users/me', {
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -469,8 +470,8 @@ passwordForm.addEventListener('submit', async (e) => {
   }
 
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/users/me/password', {
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me/password`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -522,8 +523,8 @@ if (avatarInput) {
     formData.append('avatar', file);
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/users/me/avatar', {
+      const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+      const res = await fetch(`${CONFIG.API_BASE_URL}/users/me/avatar`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -574,8 +575,8 @@ if (notificationPreferencesForm) {
     };
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/users/me/notification-preferences', {
+      const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+      const res = await fetch(`${CONFIG.API_BASE_URL}/users/me/notification-preferences`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -608,8 +609,8 @@ if (privacySettingsForm) {
     };
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/users/me/privacy-settings', {
+      const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+      const res = await fetch(`${CONFIG.API_BASE_URL}/users/me/privacy-settings`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -633,8 +634,8 @@ if (privacySettingsForm) {
 // Load preferences and settings
 async function loadPreferences() {
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/users/me/notification-preferences', {
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me/notification-preferences`, {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -656,8 +657,8 @@ async function loadPreferences() {
 
 async function loadPrivacySettings() {
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/users/me/privacy-settings', {
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me/privacy-settings`,{
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
