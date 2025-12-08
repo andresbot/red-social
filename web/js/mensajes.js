@@ -17,10 +17,10 @@ let socket = null;
 
 // Inicializar Socket.IO
 function initSocket(token) {
-  socket = io('/', {
-    auth: { token },
-    transports: ['websocket'] // fuerza WebSocket puro
-  });
+  socket = io(`${CONFIG.API_BASE_URL}`, {
+  auth: { token },
+  transports: ['websocket']
+});
 
   socket.on('connect', () => {
     console.log('Conectado al chat');
