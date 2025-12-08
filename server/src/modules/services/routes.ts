@@ -4,11 +4,11 @@ import path from 'path';
 import fs from 'fs';
 import { pool } from '../../lib/db';
 import { authenticate, optionalAuth, AuthRequest } from '../../middleware/auth';
+import { createClient } from '@supabase/supabase-js';
 const isProduction = process.env.NODE_ENV === 'production';
-let supabaseStorage: any = null;
+let supabase: any = null;
 if (isProduction) {
-  const { createClient } = require('@supabase/storage-js');
-  supabaseStorage = createClient(
+  supabase = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -216,21 +216,20 @@ servicesRouter.post('/', authenticate, upload.single('image'), async (req: AuthR
         const fileBuffer = req.file.buffer;
         const fileName = `services/${Date.now()}_${req.file.originalname}`;
         
-        const { data, error } = await supabaseStorage
-          .from('service-images')
-          .upload(fileName, fileBuffer, {
-            contentType: req.file.mimetype,
-            upsert: false
-          });
+        const { data, error } = await supabase
+        .storage
+        .from('service-images')
+        .upload(fileName, fileBuffer, {contentType: req.file.mimetype,upsert: false});
 
         if (error) {
           console.error('Supabase upload error:', error);
           return res.status(500).json({ error: 'No se pudo subir la imagen' });
         }
 
-        const { data: { publicUrl } } = supabaseStorage
-          .from('service-images')
-          .getPublicUrl(fileName);
+        const { data: { publicUrl } } = supabase
+        .storage
+        .from('service-images')
+        .getPublicUrl(fileName);
         
         image_url = publicUrl;
       } else {
