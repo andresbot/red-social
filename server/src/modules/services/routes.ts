@@ -214,7 +214,7 @@ servicesRouter.post('/', authenticate, upload.single('image'), async (req: AuthR
       if (isProduction) {
         // 🌐 Supabase Storage
         const fileBuffer = req.file.buffer;
-        const fileName = `services/${Date.now()}_${req.file.originalname}`;
+        const fileName = `services/${Date.now()}_${encodeURIComponent(req.file.originalname)}`;
         
         const { data, error } = await supabase
         .storage
