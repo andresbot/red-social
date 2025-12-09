@@ -1,4 +1,5 @@
 // Ver perfil público de usuario
+import { CONFIG } from './config.js';
 
 const urlParams = new URLSearchParams(window.location.search);
 const userId = urlParams.get('id');
@@ -20,7 +21,7 @@ async function getMyUserId() {
     const token = localStorage.getItem('token');
     if (!token) return null;
 
-    const res = await fetch('/users/me', {
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -60,7 +61,8 @@ async function loadUserProfile() {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const res = await fetch(`/users/${userId}/profile`, { headers });
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/${userId}/profile`, { headers });
+    
 
     if (!res.ok) {
       if (res.status === 404) {
@@ -241,14 +243,14 @@ async function loadUserStats() {
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     // Services count
-    const servicesRes = await fetch(`/services?user_id=${userId}`, { headers });
+    const servicesRes = await fetch(`${CONFIG.API_BASE_URL}/services?user_id=${userId}`, { headers });
     if (servicesRes.ok) {
       const services = await servicesRes.json();
       document.getElementById('statsServices').textContent = Array.isArray(services) ? services.length : 0;
     }
 
     // Contracts completed
-    const contractsRes = await fetch(`/users/${userId}/contracts-stats`, { headers });
+    const contractsRes = await fetch(`${CONFIG.API_BASE_URL}/users/${userId}/contracts-stats`, { headers });
     if (contractsRes.ok) {
       const contractsData = await contractsRes.json();
       document.getElementById('statsContracts').textContent = contractsData.total_completed || 0;
@@ -257,7 +259,7 @@ async function loadUserStats() {
     }
 
     // Rating
-    const ratingsAggRes = await fetch(`/ratings/user/${userId}?limit=5&offset=0`, { headers });
+    const ratingsAggRes = await fetch(`${CONFIG.API_BASE_URL}/ratings/user/${userId}?limit=5&offset=0`, { headers });
     if (ratingsAggRes.ok) {
       const ratingsData = await ratingsAggRes.json();
       const avg = ratingsData.avg ? Number(ratingsData.avg).toFixed(1) : 'N/A';
@@ -278,7 +280,7 @@ async function loadUserRatingsGiven() {
     const headers = { 'Accept': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(`/ratings/by-user/${userId}?limit=10&offset=0`, { headers });
+    const res = await fetch(`${CONFIG.API_BASE_URL}/ratings/by-user/${userId}?limit=10&offset=0`, { headers });
     if (!res.ok) return;
     const data = await res.json();
     renderUserRatingsGiven(data.items || [], data.avg ? Number(data.avg).toFixed(1) : 'N/A', data.total || 0);
@@ -357,7 +359,7 @@ async function loadUserSkills() {
     const headers = { 'Accept': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(`/users/${userId}/skills`, { headers });
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/${userId}/skills`, { headers });
     if (res.ok) {
       const skills = await res.json();
       if (Array.isArray(skills) && skills.length > 0) {
@@ -381,7 +383,7 @@ async function loadUserServices() {
     const headers = { 'Accept': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(`/services?user_id=${userId}`, { headers });
+    const res = await fetch(`${CONFIG.API_BASE_URL}/services?user_id=${userId}`, { headers });
     if (res.ok) {
       const services = await res.json();
       if (Array.isArray(services) && services.length > 0) {
@@ -436,7 +438,7 @@ if (contactBtn) {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/messaging/conversations', {
+      const res = await fetch(`${CONFIG.API_BASE_URL}/messaging/conversations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

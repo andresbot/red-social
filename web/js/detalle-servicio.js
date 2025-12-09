@@ -176,7 +176,7 @@ async function loadProviderInfo(userId) {
     if (viewProviderBtn) {
       viewProviderBtn.style.display = 'inline-flex';
       viewProviderBtn.addEventListener('click', () => {
-        window.location.href = `/ver-perfil?id=${userId}`;
+        window.location.href = `/vistas/ver-perfil.html?id=${userId}`;
       });
     }
   } catch (err) {
