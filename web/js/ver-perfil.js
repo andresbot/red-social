@@ -312,7 +312,7 @@ function renderUserRatingsGiven(items, avg, total) {
     item.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div style="display:flex;align-items:center;gap:8px;">${stars}<span class="helper">${new Date(r.created_at).toLocaleDateString()}</span></div>
-        <a href="/detalle-servicio?id=${r.service_id}" class="helper" style="text-decoration:none;">${r.title || 'Ver servicio'}</a>
+        <a href="/vistas/detalle-servicio.html?id=${r.service_id}" class="helper" style="text-decoration:none;">${r.title || 'Ver servicio'}</a>
       </div>
       ${r.comment ? `<div style="color:var(--text-secondary);margin-top:6px;">${r.comment}</div>` : ''}
     `;
@@ -344,7 +344,7 @@ function renderUserRatings(items, avg, total) {
     item.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div style="display:flex;align-items:center;gap:8px;">${stars}<span class="helper">${new Date(r.created_at).toLocaleDateString()}</span></div>
-        <a href="/detalle-servicio?id=${r.service_id}" class="helper" style="text-decoration:none;">${r.title || 'Ver servicio'}</a>
+        <a href="/vistas/detalle-servicio.html?id=${r.service_id}" class="helper" style="text-decoration:none;">${r.title || 'Ver servicio'}</a>
       </div>
       ${r.comment ? `<div style="color:var(--text-secondary);margin-top:6px;">${r.comment}</div>` : ''}
     `;
@@ -402,7 +402,7 @@ async function loadUserServices() {
             }
           } catch {}
           return `
-            <div class="service-card" onclick="window.location.href='/detalle-servicio?id=${service.id}'" style="cursor:pointer;">
+            <div class="service-card" onclick="window.location.href='/vistas/detalle-servicio.html?id=${service.id}'" style="cursor:pointer;">
               <div class="service-image" style="background-image: url('${service.image_url || ''}'); background-size: cover; background-position: center; height: 150px; border-radius: 8px 8px 0 0;"></div>
               <div class="service-content" style="padding: 12px;">
                 <h3 style="font-size: 16px; margin-bottom: 8px;">${service.title}</h3>
