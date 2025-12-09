@@ -117,7 +117,7 @@ async function renderServiceCard(svc) {
   card.addEventListener('click', (e) => {
     // Si se hizo clic en el enlace del proveedor, no redirigir al servicio
     if (e.target.closest('.provider-link')) return;
-    window.location.href = `/detalle-servicio?id=${svc.id}`;
+    window.location.href = `/vistas/detalle-servicio.html?id=${svc.id}`;
   });
 
   // Evento para ver perfil del proveedor
