@@ -3,8 +3,21 @@ import { pool } from '../../lib/db';
 import { authenticate, AuthRequest } from '../../middleware/auth';
 import multer from 'multer';
 import path from 'path';
+import { createClient } from '@supabase/supabase-js';
+import { promisify } from 'util';
+import fs from 'fs';
+const readFile = promisify(fs.readFile);
 
 export const contractsRouter = Router();
+
+const isProduction = process.env.NODE_ENV === 'production';
+let supabase: any = null;
+if (isProduction) {
+  supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // Configuración de subida de archivos de entrega
 const uploadDir = path.join(process.cwd(), '..', 'web', 'uploads', 'contracts');
@@ -156,7 +169,54 @@ contractsRouter.post('/:id/deliver-files', authenticate, upload.array('files', 8
     const files = (req.files as Express.Multer.File[]) || [];
     if (!files.length) return res.status(400).json({ error: 'No se enviaron archivos' });
 
-    const urls = files.map(f => `/uploads/contracts/${f.filename}`);
+    
+    let urls: string[] = [];
+
+    if (isProduction) {
+      for (const file of files) {
+        try {
+        const fileBuffer = await readFile(file.path);
+        const fileName = `deliverables/${Date.now()}_${encodeURIComponent(file.originalname)}`;
+      
+      const { data, error } = await supabase
+        .storage
+        .from('deliverables')
+        .upload(fileName, fileBuffer, {
+          contentType: file.mimetype,
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Supabase deliverable upload error:', error);
+        throw new Error('No se pudo subir el entregable');
+      }
+
+      // Obtener la URL pública
+      const { data: urlData, error: urlError } = supabase
+        .storage
+        .from('deliverables')
+        .getPublicUrl(fileName);
+
+      if (urlError) {
+        console.error('Error getting public URL:', urlError);
+        throw new Error('No se pudo obtener la URL pública del entregable');
+      }
+
+      const { publicUrl } = urlData;
+      urls.push(publicUrl.trim());
+      
+      // Eliminar archivo temporal
+      fs.unlink(file.path, (err) => {
+        if (err) console.error('Error deleting temp file:', err);
+        });
+      } catch (err) {
+      console.error('Error processing file:', err);
+      throw err;
+      }
+    }
+  } else {
+    urls = files.map(f => `/uploads/contracts/${f.filename}`);
+  }
 
     const client = await pool.connect();
     try {
