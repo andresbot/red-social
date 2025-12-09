@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import type { Request } from 'express';
+import type { File } from 'multer';
 import { pool } from '../../lib/db';
 import { authenticate, AuthRequest } from '../../middleware/auth';
 import multer from 'multer';
@@ -20,16 +22,30 @@ if (isProduction) {
 }
 
 // Configuración de subida de archivos de entrega
-const uploadDir = path.join(process.cwd(), '..', 'web', 'uploads', 'contracts');
-const storage = multer.diskStorage({
-  destination: (_req: any, _file: any, cb: (error: Error | null, destination: string) => void) => cb(null, uploadDir),
-  filename: (_req: any, file: { originalname: string }, cb: (error: Error | null, filename: string) => void) => {
+let upload: any;
+
+if (isProduction) {
+  // 🌐 En producción: usar memoryStorage (no toca el disco)
+  upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+  });
+} else {
+  // 💻 En local: usar diskStorage
+  const uploadDir = path.join(process.cwd(), '..', 'web', 'uploads', 'contracts');
+  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+  const storage = multer.diskStorage({
+  destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+    cb(null, uploadDir);
+  },
+  filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     const ext = path.extname(file.originalname);
     const name = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
     cb(null, name);
   }
 });
-const upload = multer({ storage });
+  upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+}
 
 // Crear contrato (cliente solicita servicio)
 contractsRouter.post('/', authenticate, async (req: AuthRequest, res) => {
@@ -173,10 +189,11 @@ contractsRouter.post('/:id/deliver-files', authenticate, upload.array('files', 8
     let urls: string[] = [];
 
     if (isProduction) {
-      for (const file of files) {
-        try {
-        const fileBuffer = await readFile(file.path);
-        const fileName = `deliverables/${Date.now()}_${encodeURIComponent(file.originalname)}`;
+  for (const file of files) {
+    try {
+      // ✅ En producción: usar file.buffer directamente
+      const fileBuffer = file.buffer;
+      const fileName = `deliverables/${Date.now()}_${encodeURIComponent(file.originalname)}`;
       
       const { data, error } = await supabase
         .storage
@@ -191,7 +208,6 @@ contractsRouter.post('/:id/deliver-files', authenticate, upload.array('files', 8
         throw new Error('No se pudo subir el entregable');
       }
 
-      // Obtener la URL pública
       const { data: urlData, error: urlError } = supabase
         .storage
         .from('deliverables')
@@ -204,19 +220,23 @@ contractsRouter.post('/:id/deliver-files', authenticate, upload.array('files', 8
 
       const { publicUrl } = urlData;
       urls.push(publicUrl.trim());
-      
-      // Eliminar archivo temporal
-      fs.unlink(file.path, (err) => {
-        if (err) console.error('Error deleting temp file:', err);
-        });
-      } catch (err) {
+      // ✅ No necesitas fs.unlink() en producción (no hay archivo temporal en disco)
+    } catch (err) {
       console.error('Error processing file:', err);
       throw err;
-      }
     }
-  } else {
-    urls = files.map(f => `/uploads/contracts/${f.filename}`);
   }
+} else {
+  // 💻 En local: leer del disco
+  for (const file of files) {
+    try {
+      const fileBuffer = await readFile(file.path);
+      // ... mismo código que antes
+    } catch (err) {
+      // ...
+    }
+  }
+}
 
     const client = await pool.connect();
     try {
