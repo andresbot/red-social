@@ -1,4 +1,5 @@
 // Detalle Servicio: obtiene y muestra toda la info de un servicio
+import { CONFIG } from './config.js';
 
 const detailContainer = document.getElementById('serviceDetail');
 const detailMessage = document.getElementById('detailMessage');
@@ -104,7 +105,7 @@ function renderServiceDetail(svc) {
           return;
         }
 
-        const res = await fetch('/contracts', {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/contracts`,{
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -144,7 +145,7 @@ function renderServiceDetail(svc) {
 
 async function loadProviderInfo(userId) {
   try {
-    const res = await fetch(`/users/${userId}`);
+    const res = await fetch(`${CONFIG.API_BASE_URL}/users/${userId}`);
     if (!res.ok) throw new Error('Provider not found');
     const user = await res.json();
 
@@ -190,7 +191,7 @@ async function fetchServiceDetail(id) {
   }
 
   try {
-    const res = await fetch(`/services/${id}`, { headers: { 'Accept': 'application/json' } });
+    const res = await fetch(`${CONFIG.API_BASE_URL}/services/${id}`,{ headers: { 'Accept': 'application/json' } });
     if (!res.ok) throw new Error('Servicio no encontrado');
     const svc = await res.json();
     hideMessage();
@@ -219,7 +220,7 @@ async function loadServiceRatings(serviceId) {
   summaryEl.textContent = 'Cargando reseñas...';
   listEl.innerHTML = '';
   try {
-    const res = await fetch(`/ratings/service/${serviceId}?limit=10&offset=0`);
+    const res = await fetch(`${CONFIG.API_BASE_URL}/ratings/service/${serviceId}?limit=10&offset=0`);
     if (!res.ok) throw new Error('No se pudieron cargar reseñas');
     const data = await res.json();
     const avg = data.avg ? Number(data.avg).toFixed(1) : '0.0';
