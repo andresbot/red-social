@@ -2,9 +2,11 @@ import { Router, Request } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { promisify } from 'util';
 import { pool } from '../../lib/db';
 import { authenticate, optionalAuth, AuthRequest } from '../../middleware/auth';
 import { createClient } from '@supabase/supabase-js';
+const readFile = promisify(fs.readFile);
 const isProduction = process.env.NODE_ENV === 'production';
 let supabase: any = null;
 if (isProduction) {
@@ -212,31 +214,53 @@ servicesRouter.post('/', authenticate, upload.single('image'), async (req: AuthR
     // Subir imagen según entorno
     if (req.file) {
       if (isProduction) {
-        // 🌐 Supabase Storage
-        const fileBuffer = req.file.buffer;
-        const fileName = `services/${Date.now()}_${encodeURIComponent(req.file.originalname)}`;
-        
-        const { data, error } = await supabase
-        .storage
-        .from('service-images')
-        .upload(fileName, fileBuffer, {contentType: req.file.mimetype,upsert: false});
+  // 🌐 Supabase Storage
+  let fileBuffer: Buffer;
+  try {
+    fileBuffer = await readFile(req.file.path);
+  } catch (readErr) {
+    console.error('Error reading file:', readErr);
+    return res.status(500).json({ error: 'No se pudo leer la imagen' });
+  }
 
-        if (error) {
-          console.error('Supabase upload error:', error);
-          return res.status(500).json({ error: 'No se pudo subir la imagen' });
-        }
+  const fileName = `services/${Date.now()}_${encodeURIComponent(req.file.originalname)}`;
+  
+  const { data, error } = await supabase
+    .storage
+    .from('service-images')
+    .upload(fileName, fileBuffer, {
+      contentType: req.file.mimetype,
+      upsert: false
+    });
 
-        const { data: { publicUrl } } = supabase
-        .storage
-        .from('service-images')
-        .getPublicUrl(fileName);
-        image_url = publicUrl.trim();
-      
-      } else {
-        // 💻 Disco local
-        image_url = `/uploads/${req.file.filename}`;
-      }
-    }
+  if (error) {
+    console.error('Supabase upload error:', error);
+    return res.status(500).json({ error: 'No se pudo subir la imagen' });
+  }
+
+  // Obtener la URL pública
+  const { data: urlData, error: urlError } = supabase
+    .storage
+    .from('service-images')
+    .getPublicUrl(fileName);
+
+  if (urlError) {
+    console.error('Error getting public URL:', urlError);
+    return res.status(500).json({ error: 'No se pudo obtener la URL pública' });
+  }
+
+  const { publicUrl } = urlData;
+  image_url = publicUrl.trim();
+  
+  // Opcional: elimina el archivo temporal del disco
+  fs.unlink(req.file.path, (err) => {
+    if (err) console.error('Error deleting temp file:', err);
+  });
+} else {
+  // 💻 Disco local
+  image_url = `/uploads/${req.file.filename}`;
+}
+}
 
     // Insertar servicio
     const user_id = req.userId!;
