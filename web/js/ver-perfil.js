@@ -18,7 +18,7 @@ let myUserId = null;
 // Obtener mi userId del token
 async function getMyUserId() {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
     if (!token) return null;
 
     const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
@@ -53,7 +53,7 @@ async function loadUserProfile() {
       return;
     }
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
     const headers = {
       'Accept': 'application/json'
     };
@@ -238,7 +238,7 @@ function renderProfile(user) {
 
 async function loadUserStats() {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
     const headers = { 'Accept': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -276,7 +276,7 @@ async function loadUserStats() {
 
 async function loadUserRatingsGiven() {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
     const headers = { 'Accept': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -355,7 +355,7 @@ function renderUserRatings(items, avg, total) {
 
 async function loadUserSkills() {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
     const headers = { 'Accept': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -379,7 +379,7 @@ async function loadUserSkills() {
 
 async function loadUserServices() {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
     const headers = { 'Accept': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -437,7 +437,7 @@ if (contactBtn) {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
       const res = await fetch(`${CONFIG.API_BASE_URL}/messaging/conversations`, {
         method: 'POST',
         headers: {

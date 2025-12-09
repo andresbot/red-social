@@ -98,7 +98,7 @@ function renderServiceDetail(svc) {
   if (contractBtn) {
     contractBtn.addEventListener('click', async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
         if (!token) {
           alert('Debes iniciar sesión para contratar servicios.');
           window.location.href = '/vistas/login.html';
