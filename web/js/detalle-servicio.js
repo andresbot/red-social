@@ -145,6 +145,26 @@ function renderServiceDetail(svc) {
 
 async function loadProviderInfo(userId) {
   try {
+    // Obtener tu ID (si estás logueado)
+    let myUserId = null;
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+    if (token) {
+      const resMe = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (resMe.ok) {
+        const me = await resMe.json();
+        myUserId = me.id;
+      }
+    }
+
+    // Si es tu propio perfil, redirigir inmediatamente
+    if (myUserId && userId === myUserId) {
+      window.location.href = '/vistas/perfil.html';
+      return;
+    }
+
+    // Si no es tu perfil, cargar info normal
     const res = await fetch(`${CONFIG.API_BASE_URL}/users/${userId}`);
     if (!res.ok) throw new Error('Provider not found');
     const user = await res.json();
