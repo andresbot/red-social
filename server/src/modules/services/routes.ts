@@ -283,7 +283,57 @@ servicesRouter.patch('/:id', authenticate, upload.single('image'), async (req: A
   try {
     const { id } = req.params;
     const { title, category, description, price_qz_halves, delivery_time, requirements } = req.body;
-    const image_url = req.file ? `/uploads/${req.file.filename}` : undefined;
+    let image_url = undefined;
+
+if (req.file) {
+  if (isProduction) {
+    // 🌐 Supabase Storage
+    let fileBuffer: Buffer;
+    try {
+      fileBuffer = await readFile(req.file.path);
+    } catch (readErr) {
+      console.error('Error reading file:', readErr);
+      return res.status(500).json({ error: 'No se pudo leer la imagen' });
+    }
+
+    const fileName = `services/${Date.now()}_${encodeURIComponent(req.file.originalname)}`;
+    
+    const { data, error } = await supabase
+      .storage
+      .from('service-images')
+      .upload(fileName, fileBuffer, {
+        contentType: req.file.mimetype,
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Supabase upload error:', error);
+      return res.status(500).json({ error: 'No se pudo subir la imagen' });
+    }
+
+
+    const { data: urlData, error: urlError } = supabase
+      .storage
+      .from('service-images')
+      .getPublicUrl(fileName);
+
+    if (urlError) {
+      console.error('Error getting public URL:', urlError);
+      return res.status(500).json({ error: 'No se pudo obtener la URL pública' });
+    }
+
+    const { publicUrl } = urlData;
+    image_url = publicUrl.trim();
+    
+    // Eliminar archivo temporal
+    fs.unlink(req.file.path, (err) => {
+      if (err) console.error('Error deleting temp file:', err);
+    });
+  } else {
+    // 💻 Disco local
+    image_url = `/uploads/${req.file.filename}`;
+  }
+}
     
     // Verificar que el servicio pertenece al usuario
     const ownerCheck = await pool.query('SELECT user_id FROM services WHERE id=$1', [id]);
