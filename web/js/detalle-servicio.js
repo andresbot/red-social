@@ -145,26 +145,7 @@ function renderServiceDetail(svc) {
 
 async function loadProviderInfo(userId) {
   try {
-    // Obtener tu ID (si estás logueado)
-    let myUserId = null;
-    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
-    if (token) {
-      const resMe = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (resMe.ok) {
-        const me = await resMe.json();
-        myUserId = me.id;
-      }
-    }
-
-    // Si es tu propio perfil, redirigir inmediatamente
-    if (myUserId && userId === myUserId) {
-      window.location.href = '/vistas/perfil.html';
-      return;
-    }
-
-    // Si no es tu perfil, cargar info normal
+    // Cargar info del proveedor
     const res = await fetch(`${CONFIG.API_BASE_URL}/users/${userId}`);
     if (!res.ok) throw new Error('Provider not found');
     const user = await res.json();
@@ -195,9 +176,32 @@ async function loadProviderInfo(userId) {
 
     if (viewProviderBtn) {
       viewProviderBtn.style.display = 'inline-flex';
-      viewProviderBtn.addEventListener('click', () => {
+      viewProviderBtn.onclick = async () => {
+        const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+        if (!token) {
+          // Si no hay sesión, ir a perfil público
+          window.location.href = `/vistas/ver-perfil.html?id=${userId}`;
+          return;
+        }
+
+        try {
+          const resMe = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (resMe.ok) {
+            const me = await resMe.json();
+            if (me.id === userId) {
+              // Es tu propio perfil
+              window.location.href = '/vistas/perfil.html';
+              return;
+            }
+          }
+        } catch (err) {
+          console.error('Error checking own profile:', err);
+        }
+        // Es perfil de otro usuario
         window.location.href = `/vistas/ver-perfil.html?id=${userId}`;
-      });
+      };
     }
   } catch (err) {
     console.error('Error loading provider info:', err);
