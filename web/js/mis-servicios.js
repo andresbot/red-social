@@ -1,5 +1,6 @@
 // Mis Servicios: obtiene y renderiza servicios del usuario
 import { API } from './api.js';
+import { CONFIG } from './config.js';
 
 const listEl = document.getElementById('servicesList');
 const msgEl = document.getElementById('servicesMessage');
@@ -96,8 +97,8 @@ function renderServiceItem(svc) {
   toggleBtn.addEventListener('click', async (e) => {
     e.target.disabled = true;
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/services/${svc.id}/toggle`, { 
+      const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+      const res = await fetch(`${CONFIG.API_BASE_URL}/services/${svc.id}/toggle`, { 
         method: 'PATCH', 
         headers: { 
           'Accept': 'application/json',
@@ -168,7 +169,7 @@ if (editForm) {
 
     // Usar FormData si hay imagen; JSON si no
     const imageFile = editFields.image && editFields.image.files && editFields.image.files[0];
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
     let res;
     try {
       if (imageFile) {
@@ -180,14 +181,14 @@ if (editForm) {
         formData.append('price_qz_halves', String(price_qz_halves));
         formData.append('requirements', editFields.requirements.value.trim());
         formData.append('image', imageFile);
-        res = await fetch(`/services/${id}`, { 
+        res = await fetch(`${CONFIG.API_BASE_URL}/services/${id}`, { 
           method: 'PATCH', 
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData 
         });
       } else {
         const payload = { title, category, description, delivery_time, price_qz_halves, requirements: editFields.requirements.value.trim() };
-        res = await fetch(`/services/${id}`, {
+        res = await fetch(`${CONFIG.API_BASE_URL}/services/${id}`, {
           method: 'PATCH',
           headers: { 
             'Content-Type': 'application/json', 
