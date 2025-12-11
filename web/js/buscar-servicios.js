@@ -125,7 +125,7 @@ async function renderServiceCard(svc) {
   if (providerLink) {
     providerLink.addEventListener('click', (e) => {
       e.stopPropagation();
-      window.location.href = `/ver-perfil?id=${svc.user_id}`;
+      window.location.href = `/vistas/ver-perfil.html?id=${svc.user_id}`;
     });
     providerLink.addEventListener('mouseenter', () => {
       providerLink.style.opacity = '0.8';
