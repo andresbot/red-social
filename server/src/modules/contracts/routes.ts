@@ -185,135 +185,81 @@ contractsRouter.post('/:id/deliver-files', authenticate, upload.array('files', 8
     const files = (req.files as Express.Multer.File[]) || [];
     if (!files.length) return res.status(400).json({ error: 'No se enviaron archivos' });
 
-    
     let urls: string[] = [];
 
     if (isProduction) {
-  for (const file of files) {
-    try {
-      // ✅ En producción: usar file.buffer directamente
-      const fileBuffer = file.buffer;
-      const fileName = `deliverables/${Date.now()}_${encodeURIComponent(file.originalname)}`;
-      
-      const { data, error } = await supabase
-        .storage
-        .from('deliverables')
-        .upload(fileName, fileBuffer, {
-          contentType: file.mimetype,
-          upsert: false
-        });
+      for (const file of files) {
+        try {
+          const fileBuffer = file.buffer;
+          const fileName = `deliverables/${Date.now()}_${encodeURIComponent(file.originalname)}`;
+          
+          const { data, error } = await supabase
+            .storage
+            .from('deliverables')
+            .upload(fileName, fileBuffer, {
+              contentType: file.mimetype,
+              upsert: false
+            });
 
-      if (error) {
-        console.error('Supabase deliverable upload error:', error);
-        throw new Error('No se pudo subir el entregable');
+          if (error) {
+            console.error('Supabase deliverable upload error:', error);
+            throw new Error('No se pudo subir el entregable');
+          }
+
+          const { data: urlData, error: urlError } = supabase
+            .storage
+            .from('deliverables')
+            .getPublicUrl(fileName);
+
+          if (urlError) {
+            console.error('Error getting public URL:', urlError);
+            throw new Error('No se pudo obtener la URL pública del entregable');
+          }
+
+          const { publicUrl } = urlData;
+          urls.push(publicUrl.trim());
+        } catch (err) {
+          console.error('Error processing file:', err);
+          throw err;
+        }
       }
-
-      const { data: urlData, error: urlError } = supabase
-        .storage
-        .from('deliverables')
-        .getPublicUrl(fileName);
-
-      if (urlError) {
-        console.error('Error getting public URL:', urlError);
-        throw new Error('No se pudo obtener la URL pública del entregable');
+    } else {
+      // 💻 En local: leer del disco
+      for (const file of files) {
+        try {
+          const fileBuffer = await readFile(file.path);
+          // (Nota: en local también deberías subir a Supabase o guardar en uploads y generar URL pública si lo deseas)
+          // Por simplicidad, asumimos que ya tienes una lógica similar o estás en modo dev
+          const fileName = `deliverables/${path.basename(file.path)}`;
+          const publicUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/uploads/contracts/${path.basename(file.path)}`;
+          urls.push(publicUrl);
+        } catch (err) {
+          console.error('Error reading local file:', err);
+          throw err;
+        }
       }
-
-      const { publicUrl } = urlData;
-      urls.push(publicUrl.trim());
-      // ✅ No necesitas fs.unlink() en producción (no hay archivo temporal en disco)
-    } catch (err) {
-      console.error('Error processing file:', err);
-      throw err;
     }
-  }
-} else {
-  // 💻 En local: leer del disco
-  for (const file of files) {
-    try {
-      const fileBuffer = await readFile(file.path);
-      // ... mismo código que antes
-    } catch (err) {
-      // ...
-    }
-  }
-}
 
+    // Actualizar contrato: añadir archivos, marcar como delivered
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      // Bloquear contrato y actualizar entregables
       const cRes = await client.query('SELECT * FROM contracts WHERE id=$1 FOR UPDATE', [id]);
       const c = cRes.rows[0];
 
       const existing = Array.isArray(c.delivery_files) ? c.delivery_files : [];
       const merged = [...existing, ...urls];
-      await client.query(
-        `UPDATE contracts SET delivery_files=$2, delivered_at=NOW(), updated_at=NOW() WHERE id=$1`,
-        [id, JSON.stringify(merged)]
-      );
 
-      // Liberar escrow y marcar completado automáticamente
-      const amount = Number(c.total_amount_qz_halves || c.service_price_qz_halves);
-      const fee = Number(c.platform_fee_qz_halves || 0);
-      const sellerAmount = amount - fee;
-
-      const escrowAccId = (await client.query(
-        `SELECT id FROM accounts WHERE owner_type='escrow' AND owner_id=$1 AND currency='QZ'`, [c.escrow_id]
-      )).rows[0]?.id;
-      if (!escrowAccId) {
-        await client.query('ROLLBACK');
-        client.release();
-        return res.status(500).json({ error: 'Escrow account missing' });
-      }
-
-      const sellerAcc = await client.query(
-        `INSERT INTO accounts (owner_type, owner_id, currency, name)
-         SELECT 'user', $1, 'QZ', 'user_wallet_qz'
-         WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE owner_type='user' AND owner_id=$1 AND currency='QZ')
-         RETURNING id`,
-        [c.seller_id]
-      );
-      const sellerAccId = sellerAcc.rowCount ? sellerAcc.rows[0].id : (await client.query(
-        `SELECT id FROM accounts WHERE owner_type='user' AND owner_id=$1 AND currency='QZ'`, [c.seller_id]
-      )).rows[0].id;
-
-      const platformAcc = await client.query(
-        `INSERT INTO accounts (owner_type, owner_id, currency, name)
-         SELECT 'platform', NULL, 'QZ', 'platform_qz'
-         WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE owner_type='platform' AND owner_id IS NULL AND currency='QZ')
-         RETURNING id`
-      );
-      const platformAccId = platformAcc.rowCount ? platformAcc.rows[0].id : (await client.query(
-        `SELECT id FROM accounts WHERE owner_type='platform' AND owner_id IS NULL AND currency='QZ'`
-      )).rows[0].id;
-
-      const txIns = await client.query(
-        `INSERT INTO ledger_transactions (type, status, description, external_ref)
-         VALUES ('payment','pending','Escrow release (auto-complete)', $1) RETURNING id`,
-        [id]
-      );
-      const ltx = txIns.rows[0].id;
-
-      if (fee > 0) {
-        await client.query(
-          `INSERT INTO ledger_entries (transaction_id, account_id, direction, amount_units)
-           VALUES ($1,$2,'debit',$5), ($1,$3,'credit',$6), ($1,$4,'credit',$7)`,
-          [ltx, escrowAccId, sellerAccId, platformAccId, amount, sellerAmount, fee]
-        );
-      } else {
-        await client.query(
-          `INSERT INTO ledger_entries (transaction_id, account_id, direction, amount_units)
-           VALUES ($1,$2,'debit',$4), ($1,$3,'credit',$4)`,
-          [ltx, escrowAccId, sellerAccId, amount]
-        );
-      }
-      await client.query(`UPDATE ledger_transactions SET status='completed' WHERE id=$1`, [ltx]);
-
-      await client.query(`UPDATE escrow_accounts SET status='released', released_at=NOW(), updated_at=NOW() WHERE id=$1`, [c.escrow_id]);
       const up = await client.query(
-        `UPDATE contracts SET status='completed', completed_at=NOW(), updated_at=NOW() WHERE id=$1 RETURNING *`,
-        [id]
+        `UPDATE contracts 
+         SET delivery_files = $2, 
+             status = 'delivered', 
+             delivered_at = NOW(), 
+             updated_at = NOW() 
+         WHERE id = $1 
+         RETURNING *`,
+        [id, JSON.stringify(merged)]
       );
 
       await client.query('COMMIT');
@@ -322,12 +268,12 @@ contractsRouter.post('/:id/deliver-files', authenticate, upload.array('files', 8
     } catch (err) {
       await (client.query('ROLLBACK').catch(() => {}));
       client.release();
-      console.error('Deliver files auto-complete error:', err);
-      return res.status(500).json({ error: 'Error al completar automáticamente tras entrega' });
+      console.error('Deliver files error:', err);
+      return res.status(500).json({ error: 'Error al registrar la entrega' });
     }
   } catch (e: any) {
-    console.error('Deliver files error:', e);
-    res.status(500).json({ error: 'Server error', details: e.message });
+    console.error('Deliver files outer error:', e);
+    res.status(500).json({ error: 'Error del servidor', details: e.message });
   }
 });
 

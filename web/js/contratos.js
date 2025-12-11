@@ -138,6 +138,11 @@ function getActionButtons(contract) {
     if (['pending', 'paid', 'accepted', 'in_progress'].includes(status)) {
       buttons += `<button class="btn-secondary" data-action="cancel"><i class="fas fa-ban"></i> Cancelar</button>`;
     }
+
+     //permitir confirmar si está entregado
+    if (status === 'delivered') {
+      buttons += `<button class="btn-success" data-action="complete"><i class="fas fa-check-circle"></i> Confirmar y Liberar Pago</button>`;
+    }
     if (status === 'completed' && !contract.rating_id) {
       buttons += ` <button class="btn-primary" data-action="rate"><i class="fas fa-star"></i> Calificar</button>`;
     }
@@ -332,7 +337,7 @@ if (contractsList) {
         files.forEach(f => fd.append('files', f));
         try {
           await API.postMultipart(`/contracts/${contractId}/deliver-files`, fd);
-          showMessage('Entregables subidos y contrato completado automáticamente.');
+          showMessage('Entregables subidos. Esperando confirmación del cliente.');
           fetchContracts();
         } catch (e) {
           alert(e.message || 'Error al subir entregables');
