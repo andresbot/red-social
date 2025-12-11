@@ -1,5 +1,6 @@
 // Buscar Servicios: obtiene servicios activos y permite filtrar con paginación
 import { CONFIG } from './config.js';
+import { NotificationUI } from './notifications-ui.js';
 
 const searchInput = document.getElementById('searchInput');
 const categoryFilter = document.getElementById('categoryFilter');
@@ -335,11 +336,10 @@ if (ratingFilter) ratingFilter.addEventListener('change', searchWithFilters);
 if (sortByFilter) sortByFilter.addEventListener('change', searchWithFilters);
 if (sortOrderFilter) sortOrderFilter.addEventListener('change', searchWithFilters);
 
-// WebSocket y notificaciones
+// WebSocket y notificaciones (actualizado)
 let socket = null;
-let currentUserId = null;
 
-async function initNotifications() {
+async function initWebsocketAndNotifications() {
   const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
   if (!token) return;
 
@@ -348,24 +348,19 @@ async function initNotifications() {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!res.ok) return;
-    const user = await res.json();
-    currentUserId = user.id;
 
+    const user = await res.json();
     // Conectar al WebSocket del backend
     socket = io(`${CONFIG.API_BASE_URL}`, { auth: { token } });
 
-    if (typeof window.initNotifications === 'function') {
-      window.initNotifications(currentUserId, socket);
+    // ✅ Inicializar notificaciones globales solo si la UI está presente
+    if (document.getElementById('notifications-btn')) {
+      const notifUI = new NotificationUI();
+      notifUI.init(socket);
     }
-
-    socket.on('new_notification', (notif) => {
-      if (typeof window.handleNewNotification === 'function') {
-        window.handleNewNotification(notif);
-      }
-    });
   } catch (err) {
-    console.error('No se pudo inicializar notificaciones:', err);
+    console.error('No se pudo inicializar WebSocket y notificaciones:', err);
   }
 }
 
-initNotifications();
+initWebsocketAndNotifications();
