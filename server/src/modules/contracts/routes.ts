@@ -557,7 +557,7 @@ contractsRouter.patch('/:id/status', authenticate, async (req: AuthRequest, res)
         referenceId: c.id,
         actionUrl: '/vistas/cartera.html'
       });
-      
+
         return res.json(up.rows[0]);
       } catch (err) {
         await (client.query('ROLLBACK').catch(() => {}));
@@ -624,18 +624,64 @@ contractsRouter.patch('/:id/status', authenticate, async (req: AuthRequest, res)
 
     // Actualizaciones simples con timestamps coherentes
     let simpleSql = `UPDATE contracts SET status=$1, updated_at=NOW() WHERE id=$2 RETURNING *`;
-    const params: any[] = [status, id];
-    if (status === 'accepted') {
-      simpleSql = `UPDATE contracts SET status=$1, accepted_at=NOW(), updated_at=NOW() WHERE id=$2 RETURNING *`;
-    } else if (status === 'in_progress') {
-      simpleSql = `UPDATE contracts SET status=$1, started_at=NOW(), updated_at=NOW() WHERE id=$2 RETURNING *`;
-    } else if (status === 'delivered') {
-      simpleSql = `UPDATE contracts SET status=$1, delivered_at=NOW(), updated_at=NOW() WHERE id=$2 RETURNING *`;
-    }
-    const result = await pool.query(simpleSql, params);
+const params: any[] = [status, id];
 
-    res.json(result.rows[0]);
-  } catch (e: any) {
+if (status === 'accepted') {
+  const { rows } = await pool.query(
+    `SELECT c.buyer_id, c.seller_id, c.title, u.full_name as seller_name
+     FROM contracts c
+     JOIN users u ON c.seller_id = u.id
+     WHERE c.id = $1`,
+    [id]
+  );
+
+  if (rows.length > 0) {
+    const c = rows[0];
+    await notificationService.createNotification({
+      userId: c.buyer_id,
+      type: 'contract_updated',
+      title: '¡Tu contrato fue aceptado!',
+      message: `El proveedor **${c.seller_name}** aceptó tu contrato para: "${c.title}"`,
+      referenceId: id,
+      actionUrl: '/vistas/contratos.html?role=client'
+    });
+  }
+
+  simpleSql = `UPDATE contracts SET status=$1, accepted_at=NOW(), updated_at=NOW() WHERE id=$2 RETURNING *`;
+} 
+else if (status === 'rejected') {
+  const { rows } = await pool.query(
+    `SELECT c.buyer_id, c.seller_id, c.title, u.full_name as seller_name
+     FROM contracts c
+     JOIN users u ON c.seller_id = u.id
+     WHERE c.id = $1`,
+    [id]
+  );
+
+  if (rows.length > 0) {
+    const c = rows[0];
+    await notificationService.createNotification({
+      userId: c.buyer_id,
+      type: 'contract_updated',
+      title: 'Tu contrato fue rechazado',
+      message: `El proveedor **${c.seller_name}** rechazó tu contrato para: "${c.title}"`,
+      referenceId: id,
+      actionUrl: '/vistas/contratos.html?role=client'
+    });
+  }
+
+  simpleSql = `UPDATE contracts SET status=$1, updated_at=NOW() WHERE id=$2 RETURNING *`;
+} 
+else if (status === 'in_progress') {
+  simpleSql = `UPDATE contracts SET status=$1, started_at=NOW(), updated_at=NOW() WHERE id=$2 RETURNING *`;
+} 
+else if (status === 'delivered') {
+  simpleSql = `UPDATE contracts SET status=$1, delivered_at=NOW(), updated_at=NOW() WHERE id=$2 RETURNING *`;
+}
+const result = await pool.query(simpleSql, params);
+
+res.json(result.rows[0]);
+} catch (e: any) {
     console.error('Update contract status error:', e);
     res.status(500).json({ error: 'Server error', details: e.message });
   }
