@@ -111,3 +111,6 @@ export class NotificationService {
     );
   }
 }
+
+import { pool } from '../../lib/db';
+export const notificationService = new NotificationService(pool);

@@ -8,6 +8,7 @@ import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { promisify } from 'util';
 import fs from 'fs';
+import { notificationService } from '../notifications/service';
 const readFile = promisify(fs.readFile);
 
 export const contractsRouter = Router();
@@ -105,6 +106,15 @@ contractsRouter.post('/', authenticate, async (req: AuthRequest, res) => {
        RETURNING *`,
       [contract_number, buyer_id, seller_id, service_id, service.title, service.description, service.price_qz_halves, delivery_days]
     );
+    // Notificar al proveedor
+    await notificationService.createNotification({
+      userId: seller_id,
+      type: 'contract_updated',
+      title: 'Nuevo contrato recibido',
+      message: `Nuevo contrato para el servicio: "${result.rows[0].title}"`,
+      referenceId: result.rows[0].id,
+      actionUrl: '/vistas/contratos.html?role=provider'
+  });
 
     res.status(201).json(result.rows[0]);
   } catch (e: any) {
@@ -264,6 +274,15 @@ contractsRouter.post('/:id/deliver-files', authenticate, upload.array('files', 8
 
       await client.query('COMMIT');
       client.release();
+      // Notificar al cliente
+      await notificationService.createNotification({
+      userId: c.buyer_id,
+      type: 'contract_updated',
+      title: 'Entregables listos',
+      message: `El proveedor subió los entregables para: "${c.title}"`,
+      referenceId: id,
+      actionUrl: '/vistas/contratos.html?role=client'
+    });
       return res.json(up.rows[0]);
     } catch (err) {
       await (client.query('ROLLBACK').catch(() => {}));
@@ -529,6 +548,16 @@ contractsRouter.patch('/:id/status', authenticate, async (req: AuthRequest, res)
 
         await client.query('COMMIT');
         client.release();
+        // Notificar al proveedor
+        await notificationService.createNotification({
+        userId: c.seller_id,
+        type: 'transaction_completed',
+        title: 'Pago liberado',
+        message: `¡Pago liberado! ${(amount / 2).toFixed(1)} QZ acreditados por: "${c.title}"`,
+        referenceId: c.id,
+        actionUrl: '/vistas/cartera.html'
+      });
+      
         return res.json(up.rows[0]);
       } catch (err) {
         await (client.query('ROLLBACK').catch(() => {}));
